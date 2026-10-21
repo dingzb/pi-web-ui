@@ -313,13 +313,14 @@ describe("双击项目名字与运行的对话空白处新建对话", () => {
 		expect(pickerOpened).toBe(false);
 	});
 
-	it("双击历史会话列表空白处（sessions-scroll）触发 new_chat", () => {
+	it("双击历史会话列表空白处（projects-scroll）触发 new_chat", () => {
 		const sent: unknown[] = [];
 		const panelSend = (msg: unknown) => {
 			sent.push(msg);
 			return true;
 		};
 
+		setAppGlobals({ cwd: "/test" });
 		const props = {
 			active: true,
 			sessionFile: null,
@@ -334,7 +335,7 @@ describe("双击项目名字与运行的对话空白处新建对话", () => {
 					messageCount: 1,
 				},
 			],
-			projects: [],
+			projects: [{ path: "/test", lastUsed: Date.now() }],
 			activeConversationId: "",
 			panelSend,
 		};
@@ -343,7 +344,7 @@ describe("双击项目名字与运行的对话空白处新建对话", () => {
 			root!.render(createElement(LanguageProvider, null, createElement(LeftPanel as any, props)));
 		});
 
-		const sessionsScroll = container!.querySelector(".sessions-scroll");
+		const sessionsScroll = container!.querySelector(".projects-scroll");
 		expect(sessionsScroll).not.toBeNull();
 
 		act(() => {

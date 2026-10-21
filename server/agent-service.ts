@@ -10932,20 +10932,29 @@ export class ClientSession {
 		try {
 			// Sessions live in the SDK default per-project dir
 			// (<agentDir>/sessions/--<cwd>--/), the same files the pi CLI/TUI
-			// use — one listing covers every conversation of the current folder.
-			const infos = await this.loadSessionInfos();
+			// use. Include recent workspaces so the sidebar can group their history.
+			const projectPaths = new Set([
+				this.cwd,
+				...(await this.stateStore.getRecentProjects(this.clientId)).map((p) => p.path),
+			]);
+			const projectInfos = await Promise.all(
+				[...projectPaths].slice(0, 25).map(async (cwd) => ({ cwd, infos: await this.loadSessionInfos(cwd) })),
+			);
 
 			// 默认隐藏「被 fork 掉的父会话」（仅保留每条 fork 链最新的链尾会话）；
 			// 开启 showForkedParentSessions 时保留全部会话（全文搜索 searchSessions 始终保留全部）。
 			const showForkedParents = this.settingsSvc.current.showForkedParentSessions === true;
-			const visibleInfos = filterForkedParentSessions(infos, showForkedParents);
+			const visibleInfos = projectInfos.flatMap(({ cwd, infos }) =>
+				filterForkedParentSessions(infos, showForkedParents).map((info) => ({ ...info, cwd })),
+			);
 
 			const sessions = new Map<string, SessionSummary>();
 			for (const s of visibleInfos) {
-				const isPinned = this.stateStore?.isSessionPinned(this.cwd, s.path);
+				const isPinned = this.stateStore?.isSessionPinned(s.cwd, s.path);
 				const displayName = s.name?.trim() || (s.firstMessage ? s.firstMessage.trim().replace(/\s+/g, " ") : undefined);
 				sessions.set(s.path, {
 					path: s.path,
+					cwd: s.cwd,
 					...(s.id ? { sessionId: s.id } : {}),
 					name: s.name,
 					displayName,
@@ -10957,7 +10966,7 @@ export class ClientSession {
 					...(s.parentSessionPath ? { parentSessionPath: s.parentSessionPath } : {}),
 				});
 			}
-			const sorted = [...sessions.values()].sort((a, b) => b.modified - a.modified).slice(0, 200); // newest first — the panel shows recent history
+			const sorted = [...sessions.values()].sort((a, b) => b.modified - a.modified);
 			this.emit({ type: "sessions", sessions: sorted });
 		} catch {
 			this.emit({ type: "sessions", sessions: [] });

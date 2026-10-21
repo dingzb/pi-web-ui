@@ -24410,3 +24410,35 @@ a.set-uninstall:hover {
 	font-size: 13px;
 	flex-shrink: 0;
 }
+
+/* Project-grouped conversation history */
+.lp-project-group,
+.lp-project-sessions {
+	min-width: 0;
+	max-width: 100%;
+}
+.lp-project-sessions {
+	margin: 2px 0 12px 18px;
+	padding-left: 6px;
+	border-left: 1px solid var(--border);
+}
+.lp-project-toggle {
+	flex: none;
+	display: grid;
+	place-items: center;
+	width: 22px;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: var(--text-faint);
+	cursor: pointer;
+}
+.lp-project-group > .lp-row {
+	display: flex;
+	min-width: 0;
+	max-width: 100%;
+}
+.lp-project-group .project-item {
+	flex: 1;
+	min-width: 0;
+}

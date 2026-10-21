@@ -1493,6 +1493,8 @@ export interface RemoteSshProfileSummary {
 // ---------------------------------------------------------------------------
 
 export interface SessionSummary {
+	/** Workspace owning this transcript. */
+	cwd?: string;
 	path: string;
 	/** 稳定会话 UUID（转录头 `id` 或目录名，供 `#s=<sessionId>` URL 深链与跨重启定位，issue #587）。 */
 	sessionId?: string;

@@ -1193,7 +1193,11 @@ function reducer(state: ChatState, action: Action): ChatState {
 		case "engines_status":
 			return { ...state, engines: action.engines };
 		case "sessions":
-			writeCachedSessions(state.state?.cwd, action.sessions, state.engine);
+			writeCachedSessions(
+				state.state?.cwd,
+				action.sessions.filter((s) => !s.cwd || s.cwd === state.state?.cwd),
+				state.engine,
+			);
 			return { ...state, sessions: action.sessions };
 		case "conversations":
 			return {

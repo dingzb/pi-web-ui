@@ -66,6 +66,8 @@ pi-web-ui 是 pi 编码智能体（`@earendil-works/pi-coding-agent` SDK）的 W
 | 计划模式              | `server/plan-mode.ts`              | 目标条展开行「只规划」触发；动态剔除写工具并施加硬闸门拦截；禁倾倒大段代码；必须通过计划看板「开始实施」退出；回归 `plan-mode-test`。                                                                                         |
 | 审查者模式            | `server/delegate-mode.ts`          | 开启后主会话只审不干，Prompt 自动投递常驻执行对话；硬闸门拦截一切写类与派发工具；计划模式优先级高于委派；回归 `delegate-mode-test`。                                                                                          |
 
+左侧项目与历史对话合并为项目分组列表（`LeftPanel.tsx`）：`SessionSummary.cwd` 标记所属项目，历史插件动作并入项目区，`host:lp-history` 不再独立渲染；运行对话区保持独立。详见 `docs/architecture-core.md`「项目分组侧栏」。
+
 ## 5. 开发工作流
 
 > 详见 `docs/development.md`

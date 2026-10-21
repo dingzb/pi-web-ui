@@ -47,7 +47,7 @@ function mountLeftPanel(overrides: Record<string, unknown> = {}) {
 				messageCount: 1,
 			},
 		],
-		projects: [],
+		projects: [{ path: "/test", lastUsed: Date.now() }],
 		activeConversationId: "",
 		panelSend,
 		pathCompletions: [
@@ -87,7 +87,7 @@ describe("LeftPanel 标题栏操作与项目管理", () => {
 		// 标题栏存在
 		const projectsSection = container.querySelector(".panel-projects");
 		expect(projectsSection).toBeTruthy();
-		expect(projectsSection?.textContent).toContain("最近项目");
+		expect(projectsSection?.textContent).toContain("项目");
 
 		// 项目管理按钮存在
 		const projectActionBtn = container.querySelector(".lp-project-action");
@@ -97,7 +97,7 @@ describe("LeftPanel 标题栏操作与项目管理", () => {
 		expect(container.querySelector(".projects-scroll")).toBeNull();
 	});
 
-	it("“历史对话”标题栏渲染新对话加号按钮，点击后发送 new_chat 且不影响折叠状态", () => {
+	it("合并的项目标题栏渲染新对话加号按钮，点击后发送 new_chat 且不影响折叠状态", () => {
 		setAppGlobals({ cwd: "/test", ready: true, status: "open", workspaceRoots: [] });
 		const { container, sent } = mountLeftPanel();
 
@@ -106,7 +106,7 @@ describe("LeftPanel 标题栏操作与项目管理", () => {
 		expect(newChatBtn?.title).toBeTruthy();
 		expect(newChatBtn?.getAttribute("aria-label")).toBeTruthy();
 
-		const sessionsSection = container.querySelector(".panel-sessions");
+		const sessionsSection = container.querySelector(".panel-projects");
 		const wasCollapsed = sessionsSection?.classList.contains("collapsed");
 
 		// 点击加号
@@ -295,7 +295,7 @@ describe("LeftPanel P1：分区标题栏 / 项目行 / 项目右键插件位", (
 	});
 	const oneProject = [{ path: "/test/p1", lastUsed: Date.now() }];
 
-	it("三个分区标题栏各自渲染本槽位的插件按钮（插在宿主按钮之后）", () => {
+	it("合并后的项目标题保留项目与历史插件按钮", () => {
 		setAppGlobals({ cwd: "/test", ready: true, status: "open", workspaceRoots: [] });
 		const { container } = mountLeftPanel({
 			projects: oneProject,
@@ -307,10 +307,10 @@ describe("LeftPanel P1：分区标题栏 / 项目行 / 项目右键插件位", (
 		const pick = (sel: string) => container.querySelector(`${sel} .lp-section-actions .lp-slot-section .lp-slot-btn`);
 		expect(pick(".panel-projects")?.getAttribute("aria-label")).toBe("PA");
 		expect(pick(".panel-convs")?.getAttribute("aria-label")).toBe("RA");
-		expect(pick(".panel-sessions")?.getAttribute("aria-label")).toBe("HA");
+		expect(container.querySelector('.panel-projects [aria-label="HA"]')).toBeTruthy();
 		// 宿主「管理项目」按钮仍在，插件按钮紧随其后
 		const projActions = container.querySelector(".panel-projects .lp-section-actions");
-		expect(projActions?.firstElementChild?.classList.contains("lp-project-action")).toBe(true);
+		expect(projActions?.firstElementChild?.classList.contains("lp-new-chat-action")).toBe(true);
 	});
 
 	it("分区标题栏无插件条目时不留占位（标题栏 DOM 与旧版一致）", () => {
@@ -406,13 +406,13 @@ describe("LeftPanel P2：分区顺序 / 显隐 / 分隔条 / 行内槽位拆分"
 			conversations: runningConv,
 			uiSections: [hostSection("host:lp-history"), hostSection("host:lp-projects"), hostSection("host:lp-running")],
 		});
-		expect(sectionOrder(container)).toEqual(["sessions", "projects", "convs"]);
+		expect(sectionOrder(container)).toEqual(["projects", "convs"]);
 	});
 
 	it("隐藏的分区不渲染，分隔条按剩余展开分区重新配对", () => {
 		setAppGlobals({ cwd: "/test", ready: true, status: "open", workspaceRoots: [] });
 		const all = mountLeftPanel({ projects: oneProject, conversations: runningConv });
-		expect(all.container.querySelectorAll(".lp-sash")).toHaveLength(2);
+		expect(all.container.querySelectorAll(".lp-sash")).toHaveLength(1);
 		all.container.remove();
 		act(() => root!.unmount());
 		root = null;
@@ -426,15 +426,15 @@ describe("LeftPanel P2：分区顺序 / 显隐 / 分隔条 / 行内槽位拆分"
 				hostSection("host:lp-history"),
 			],
 		});
-		expect(sectionOrder(container)).toEqual(["convs", "sessions"]);
-		expect(container.querySelectorAll(".lp-sash")).toHaveLength(1);
+		expect(sectionOrder(container)).toEqual(["convs"]);
+		expect(container.querySelectorAll(".lp-sash")).toHaveLength(0);
 	});
 
-	it("默认（无 uiSections）三区全显示、两条分隔条，与改造前一致", () => {
+	it("默认显示项目对话与运行对话两个分区、一条分隔条", () => {
 		setAppGlobals({ cwd: "/test", ready: true, status: "open", workspaceRoots: [] });
 		const { container } = mountLeftPanel({ projects: oneProject, conversations: runningConv });
-		expect(sectionOrder(container)).toEqual(["projects", "convs", "sessions"]);
-		expect(container.querySelectorAll(".lp-sash")).toHaveLength(2);
+		expect(sectionOrder(container)).toEqual(["projects", "convs"]);
+		expect(container.querySelectorAll(".lp-sash")).toHaveLength(1);
 	});
 
 	it("运行行与历史行各用自己的行内槽位；leftpanel.sessions 两边都有", () => {
@@ -462,7 +462,7 @@ describe("LeftPanel P2：分区顺序 / 显隐 / 分隔条 / 行内槽位拆分"
 				b.getAttribute("aria-label"),
 			);
 		expect(labels(".panel-convs")).toEqual(["s", "r"]);
-		expect(labels(".panel-sessions")).toEqual(["s", "h"]);
+		expect(labels(".lp-project-sessions")).toEqual(["s", "h"]);
 	});
 });
 
@@ -589,5 +589,32 @@ describe("LeftPanel P4：插件自定义分区（kind=view）", () => {
 		setAppGlobals({ cwd: "/test", ready: true, status: "open", workspaceRoots: [] });
 		const { container } = mountLeftPanel({ uiSections: allSections([pluginSection("notes:fav", "收藏", true)]) });
 		expect(container.querySelector(".lp-section-plugin")).toBeNull();
+	});
+});
+
+describe("按项目分组的历史", () => {
+	it("分组显示、独立折叠并直接打开其他项目的对话", () => {
+		setAppGlobals({ cwd: "/a", ready: true, status: "open", workspaceRoots: [] });
+		const { container, sent } = mountLeftPanel({
+			projects: [
+				{ path: "/a", lastUsed: 2 },
+				{ path: "/b", lastUsed: 1 },
+			],
+			sessions: [
+				{ path: "a.jsonl", cwd: "/a", name: "A chat", firstMessage: "", messageCount: 1, modified: 2 },
+				{ path: "b.jsonl", cwd: "/b", name: "B chat", firstMessage: "", messageCount: 1, modified: 1 },
+			],
+		});
+		const groups = container.querySelectorAll(".lp-project-group");
+		expect(groups).toHaveLength(2);
+		expect(groups[0].textContent).toContain("A chat");
+		expect(groups[0].textContent).not.toContain("B chat");
+		sent.length = 0;
+		act(() => (groups[1].querySelector(".session-item") as HTMLButtonElement).click());
+		expect(sent).toEqual([{ type: "switch_session", path: "b.jsonl" }]);
+		act(() => (groups[0].querySelector(".lp-project-toggle") as HTMLButtonElement).click());
+		expect(groups[0].querySelector(".session-item")).toBeNull();
+		expect(groups[1].querySelector(".session-item")).toBeTruthy();
+		expect(container.querySelector(".lp-section-sessions")).toBeNull();
 	});
 });

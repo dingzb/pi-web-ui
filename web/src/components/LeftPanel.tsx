@@ -161,7 +161,6 @@ function isEditableTarget(el: EventTarget | null): boolean {
 
 const LS_COLLAPSE_PROJECTS = "pi-web-ui:lp-collapse-projects";
 const LS_COLLAPSE_CONVS = "pi-web-ui:lp-collapse-convs";
-const LS_COLLAPSE_SESSIONS = "pi-web-ui:lp-collapse-sessions";
 const LS_COLLAPSE_SUBAGENTS = "pi-web-ui:lp-collapse-subagents";
 
 function useCollapsedSubagents(): [Set<string>, (id: string) => void] {
@@ -298,25 +297,20 @@ export const LeftPanel = memo(function LeftPanel({
 	const workspaceRoots = useAppField("workspaceRoots");
 	const currentCwd = cwd;
 	const [projectPickerOpen, setProjectPickerOpen] = useState(false);
+	const [collapsedProjects, setCollapsedProjects] = useState<Set<string>>(() => new Set());
 	const [confirmDel, setConfirmDel] = useState<string | null>(null);
 	const [confirmTakeover, setConfirmTakeover] = useState<string | null>(null);
 	const [renaming, setRenaming] = useState<string | null>(null);
 	const [renameDraft, setRenameDraft] = useState("");
 	const [collapseProjects, toggleProjects] = useCollapsed(LS_COLLAPSE_PROJECTS, false);
 	const [collapseConvs, toggleConvs] = useCollapsed(LS_COLLAPSE_CONVS, false);
-	const [collapseSessions, toggleSessions] = useCollapsed(LS_COLLAPSE_SESSIONS, false);
 	const [pluginCollapsed, togglePluginCollapsed] = usePluginSectionCollapse();
 	const [collapsedSubagents, toggleSubagents] = useCollapsedSubagents();
 	const [visibleSessionCount, setVisibleSessionCount] = useState(60);
 	useEffect(() => {
 		setVisibleSessionCount(60);
 	}, [currentCwd]);
-	const visibleSessions = useMemo(() => {
-		if (sessions.length <= visibleSessionCount) return sessions;
-		const activeIdx = currentFile ? sessions.findIndex((s) => s.path === currentFile) : -1;
-		const cap = activeIdx >= visibleSessionCount ? activeIdx + 10 : visibleSessionCount;
-		return sessions.slice(0, cap);
-	}, [sessions, visibleSessionCount, currentFile]);
+
 	/** 会话右键菜单（`contextmenu.session` 槽位）：见下面的 showSessionMenu / openSessionMenu /
 	 *  dispatchHostSessionEntry。宿主自己的两条（关闭已结束子代理 / 强行关闭对话）也在这个槽位里，
 	 *  与插件贡献的条目同排 —— 插件条目由 App 分发给插件，host 条目由本组件分派。 */
@@ -791,7 +785,7 @@ export const LeftPanel = memo(function LeftPanel({
 		return [...conversations, ...filteredElsewhere];
 	}, [conversations, elsewhere]);
 	// P2：分区顺序与显隐（宏观来自宿主 leftpanel.sections 的合并结果；布局页可隐藏 / 调序）。
-	const sectionPlan = planLeftSections(uiSections);
+	const sectionPlan = planLeftSections(uiSections).filter((p) => p.key !== "sessions");
 	const shownPlan = sectionPlan.filter((p) => p.shown);
 	const collapsedOf = (k: LpSectionKey): boolean =>
 		k === "projects"
@@ -799,7 +793,7 @@ export const LeftPanel = memo(function LeftPanel({
 			: k === "convs"
 				? collapseConvs
 				: k === "sessions"
-					? collapseSessions
+					? false
 					: pluginCollapsed.has(k);
 	/** 参与权重的分区：显示中且有内容（项目区需有项目，运行区需有运行对话）。 */
 	/** P3：运行分区的条目数 = 对话（含另一处）+ 插件运行条目；两者任一有就显示分区。 */
@@ -885,7 +879,7 @@ export const LeftPanel = memo(function LeftPanel({
 			window.addEventListener("pointermove", onMove);
 			window.addEventListener("pointerup", onUp);
 		},
-		[weights, flexKeys, collapseProjects, collapseConvs, collapseSessions],
+		[weights, flexKeys, collapseProjects, collapseConvs],
 	);
 
 	useEffect(() => {
@@ -1011,6 +1005,132 @@ export const LeftPanel = memo(function LeftPanel({
 		[panelSend],
 	);
 
+	const renderProjectSessions = (projectPath: string) => (
+		<div className="lp-project-sessions">
+			{!sessions.some((s) => (s.cwd ?? currentCwd) === projectPath) && (
+				<div className="panel-empty">{t("noHistory")}</div>
+			)}
+			{sessions
+				.filter((s) => (s.cwd ?? currentCwd) === projectPath)
+				.slice(0, visibleSessionCount)
+				.map((s) => {
+					const norm = (v?: string) =>
+						(v ?? "")
+							.trim()
+							.replace(/[\\/]+$/, "")
+							.toLowerCase();
+					const active = currentFile === s.path;
+					const switching = transition?.kind === "session" && norm(transition.target) === norm(s.path);
+					return (
+						<div
+							className="lp-row"
+							key={s.path}
+							onMouseLeave={() => setConfirmDel((k) => (k === `sess:${s.path}` ? null : k))}
+							onContextMenu={(e) => openSessionMenu(e, { id: s.path, kind: "history", label: displayName(s) })}
+						>
+							<button
+								type="button"
+								className={`session-item ${active ? "active" : ""} ${switching ? "switching" : ""}`}
+								title={s.path}
+								disabled={switching}
+								onClick={() => {
+									if (renaming || switching) return;
+									if (!active) panelSend({ type: "switch_session", path: s.path });
+								}}
+							>
+								<span className="session-icon-wrap">
+									{switching ? (
+										<HalfRingSpinner className="session-icon spin" />
+									) : (
+										<FiMessageSquare className="session-icon" />
+									)}
+								</span>
+								<span className="session-info">
+									{renaming === s.path ? (
+										<input
+											autoFocus
+											className="session-rename-input"
+											value={renameDraft}
+											placeholder={t("renameSessionPlaceholder")}
+											onClick={(e) => e.stopPropagation()}
+											onChange={(e) => setRenameDraft(e.target.value)}
+											onKeyDown={(e) => {
+												e.stopPropagation();
+												if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+													const name = renameDraft.trim();
+													if (name) panelSend({ type: "rename_session", path: s.path, name });
+													setRenaming(null);
+												} else if (e.key === "Escape") {
+													setRenaming(null);
+												}
+											}}
+											onBlur={() => setRenaming(null)}
+										/>
+									) : (
+										<span className="session-title">
+											{s.pinned && (
+												<span className="pin-badge" title={t("pinnedConversation")}>
+													📌
+												</span>
+											)}
+											{displayName(s)}
+										</span>
+									)}
+									{renaming === s.path ? null : (
+										<span className="session-sub">
+											{active ? t("current") : t("messageCount", { n: s.messageCount })}
+											{s.source === "tui" && (
+												<span className="session-src" title={t("tuiTip")}>
+													TUI
+												</span>
+											)}
+											{s.parentSessionPath && (
+												<span
+													className="session-src session-fork-badge"
+													title={t("forkedSessionTip", {
+														parent: (() => {
+															const normP = norm(s.parentSessionPath).replace(/\\/g, "/");
+															const pSess = sessions.find((p) => norm(p.path).replace(/\\/g, "/") === normP);
+															if (pSess) return displayName(pSess);
+															const base =
+																s.parentSessionPath.replace(/\\/g, "/").split("/").pop() ?? s.parentSessionPath;
+															return base.replace(/\.jsonl$/i, "");
+														})(),
+													})}
+												>
+													{t("forkedSessionBadge")}
+												</span>
+											)}
+										</span>
+									)}
+								</span>
+								<span className={`session-time ${switching ? "switching-pct" : ""}`}>
+									{switching ? `${transition.progress}%` : formatModified(s.modified)}
+								</span>
+							</button>
+							<button
+								type="button"
+								className="lp-del lp-rename"
+								title={t("renameSession")}
+								onClick={(e) => {
+									e.stopPropagation();
+									setConfirmDel(null);
+									setRenameDraft(s.name ?? "");
+									setRenaming(s.path);
+								}}
+							>
+								<FiEdit2 />
+							</button>
+							{delButton(`sess:${s.path}`, t("deleteSession"), t("deleteSessionConfirm"), () => {
+								clearCachedSession(s.path, s.cwd ?? currentCwd);
+								panelSend({ type: "delete_session", path: s.path });
+							})}
+							{renderInlineEntries(historyRowEntries, "lp-slot-sessions")}
+						</div>
+					);
+				})}
+		</div>
+	);
 	// P2：分区节点（内容与改造前的 JSX 逐字相同，只是改由下面的计划按序挂载）。
 	const sectionNodes: Record<"projects" | "convs" | "sessions", React.ReactNode> = {
 		projects: (
@@ -1021,11 +1141,23 @@ export const LeftPanel = memo(function LeftPanel({
 					style={projects.length > 0 && !collapseProjects ? { flex: `${effFlex("projects")} 1 0px` } : undefined}
 				>
 					{sectionHeader(
-						t("recentProjects"),
+						t("gsProjects"),
 						collapseProjects,
 						toggleProjects,
 						projects.length,
 						<>
+							<button
+								type="button"
+								className="lp-section-action lp-new-chat-action"
+								title={t("newChatTip")}
+								aria-label={t("newChat")}
+								onClick={() => {
+									panelSend({ type: "new_chat" });
+									focusComposer();
+								}}
+							>
+								<FiPlus />
+							</button>
 							{onOpenSandboxModal && (
 								<button
 									type="button"
@@ -1047,10 +1179,21 @@ export const LeftPanel = memo(function LeftPanel({
 								<FiFolderPlus />
 							</button>
 						</>,
-						renderInlineEntries(uiProjectsActions, "lp-slot-section"),
+						<>
+							{renderInlineEntries(uiProjectsActions, "lp-slot-section")}
+							{renderInlineEntries(uiHistoryActions, "lp-slot-section")}
+						</>,
 					)}
 					{projects.length > 0 && !collapseProjects && (
-						<div className="lp-section-body projects-scroll" onDoubleClick={handleBlankDoubleClick}>
+						<div
+							className="lp-section-body projects-scroll"
+							onDoubleClick={handleBlankDoubleClick}
+							onScroll={(e) => {
+								const el = e.currentTarget;
+								if (el.scrollHeight - el.scrollTop - el.clientHeight < 180)
+									setVisibleSessionCount((n) => Math.min(sessions.length, n + 60));
+							}}
+						>
 							{projects.map((p) => {
 								const norm = (v?: string) =>
 									(v ?? "")
@@ -1062,77 +1205,96 @@ export const LeftPanel = memo(function LeftPanel({
 								const sbx = p.sandbox;
 								const dispName = sbx ? sbx.name : projectName(p.path);
 								return (
-									<div
-										className="lp-row"
-										key={p.path}
-										onMouseLeave={() => setConfirmDel((k) => (k === `proj:${p.path}` ? null : k))}
-										onContextMenu={(e) => openProjectMenu(e, p)}
-									>
-										<button
-											type="button"
-											className={`project-item ${active ? "active" : ""} ${switching ? "switching" : ""}`}
-											title={
-												sbx?.sourcePath
-													? `${dispName}\n${t("sandboxSourceLabel")}: ${sbx.sourcePath}\n${p.path}`
-													: p.path
-											}
-											disabled={switching}
-											onClick={() => {
-												if (!active && !switching) panelSend({ type: "set_cwd", path: p.path });
-											}}
-											onDoubleClick={(e) => {
-												e.stopPropagation();
-												if (switching) return;
-												if (active) {
-													panelSend({ type: "new_chat" });
-												} else {
-													panelSend({ type: "set_cwd", path: p.path });
-													panelSend({ type: "new_chat" });
-												}
-												focusComposer();
-											}}
+									<div className="lp-project-group" key={p.path}>
+										<div
+											className="lp-row"
+											key={p.path}
+											onMouseLeave={() => setConfirmDel((k) => (k === `proj:${p.path}` ? null : k))}
+											onContextMenu={(e) => openProjectMenu(e, p)}
 										>
-											{switching ? (
-												<HalfRingSpinner className="project-icon spin" />
-											) : sbx ? (
-												<LuFlaskConical className="project-icon sandbox-icon" />
-											) : (
-												<FiFolder className="project-icon" />
+											<button
+												type="button"
+												className="lp-project-toggle"
+												aria-label={t(collapsedProjects.has(p.path) ? "expandSection" : "collapseSection")}
+												aria-expanded={!collapsedProjects.has(p.path)}
+												onClick={() =>
+													setCollapsedProjects((prev) => {
+														const next = new Set(prev);
+														if (next.has(p.path)) next.delete(p.path);
+														else next.add(p.path);
+														return next;
+													})
+												}
+											>
+												{collapsedProjects.has(p.path) ? <FiChevronRight /> : <FiChevronDown />}
+											</button>
+											<button
+												type="button"
+												className={`project-item ${active ? "active" : ""} ${switching ? "switching" : ""}`}
+												title={
+													sbx?.sourcePath
+														? `${dispName}\n${t("sandboxSourceLabel")}: ${sbx.sourcePath}\n${p.path}`
+														: p.path
+												}
+												disabled={switching}
+												onClick={() => {
+													if (!active && !switching) panelSend({ type: "set_cwd", path: p.path });
+												}}
+												onDoubleClick={(e) => {
+													e.stopPropagation();
+													if (switching) return;
+													if (active) {
+														panelSend({ type: "new_chat" });
+													} else {
+														panelSend({ type: "set_cwd", path: p.path });
+														panelSend({ type: "new_chat" });
+													}
+													focusComposer();
+												}}
+											>
+												{switching ? (
+													<HalfRingSpinner className="project-icon spin" />
+												) : sbx ? (
+													<LuFlaskConical className="project-icon sandbox-icon" />
+												) : (
+													<FiFolder className="project-icon" />
+												)}
+												<span className="project-info">
+													<span className="project-name">
+														{dispName}
+														{sbx && (
+															<span className={`lp-sandbox-badge ${sbx.ephemeral ? "ephemeral" : "permanent"}`}>
+																{sbx.ephemeral ? t("sandboxBadgeEphemeral") : t("sandboxBadgePermanent")}
+															</span>
+														)}
+													</span>
+													<span className="project-path">
+														{sbx?.sourcePath ? `← ${projectName(sbx.sourcePath)} · ${p.path}` : p.path}
+													</span>
+												</span>
+												<span className={`project-time ${switching ? "switching-pct" : ""}`}>
+													{switching ? `${transition.progress}%` : formatModified(p.lastUsed)}
+												</span>
+											</button>
+											{delButton(
+												`proj:${p.path}`,
+												sbx ? t("sandboxActionDestroyTip") : t("deleteProject"),
+												sbx ? t("sandboxActionDestroy") : t("deleteProjectConfirm"),
+												() => {
+													clearLastCwdIfMatches(p.path);
+													clearCachedProject(p.path);
+													panelSend(
+														sbx ? { type: "destroy_sandbox", path: p.path } : { type: "remove_project", path: p.path },
+													);
+												},
 											)}
-											<span className="project-info">
-												<span className="project-name">
-													{dispName}
-													{sbx && (
-														<span className={`lp-sandbox-badge ${sbx.ephemeral ? "ephemeral" : "permanent"}`}>
-															{sbx.ephemeral ? t("sandboxBadgeEphemeral") : t("sandboxBadgePermanent")}
-														</span>
-													)}
-												</span>
-												<span className="project-path">
-													{sbx?.sourcePath ? `← ${projectName(sbx.sourcePath)} · ${p.path}` : p.path}
-												</span>
-											</span>
-											<span className={`project-time ${switching ? "switching-pct" : ""}`}>
-												{switching ? `${transition.progress}%` : formatModified(p.lastUsed)}
-											</span>
-										</button>
-										{delButton(
-											`proj:${p.path}`,
-											sbx ? t("sandboxActionDestroyTip") : t("deleteProject"),
-											sbx ? t("sandboxActionDestroy") : t("deleteProjectConfirm"),
-											() => {
-												clearLastCwdIfMatches(p.path);
-												clearCachedProject(p.path);
-												panelSend(
-													sbx ? { type: "destroy_sandbox", path: p.path } : { type: "remove_project", path: p.path },
-												);
-											},
-										)}
-										{renderInlineEntries(uiLeftProject, "lp-slot-project", {
-											id: p.path,
-											kind: "project",
-											label: dispName,
-										})}
+											{renderInlineEntries(uiLeftProject, "lp-slot-project", {
+												id: p.path,
+												kind: "project",
+												label: dispName,
+											})}
+										</div>
+										{!collapsedProjects.has(p.path) && renderProjectSessions(p.path)}
 									</div>
 								);
 							})}
@@ -1541,166 +1703,7 @@ export const LeftPanel = memo(function LeftPanel({
 				)}
 			</>
 		),
-		sessions: (
-			<>
-				{/* History sessions — collapsible, flex share, takes remaining */}
-				<div
-					className={`lp-section lp-section-sessions panel-sessions ${collapseSessions ? "collapsed" : ""}`}
-					style={!collapseSessions ? { flex: `${effFlex("sessions")} 1 0px` } : undefined}
-				>
-					{sectionHeader(
-						t("historySessions"),
-						collapseSessions,
-						toggleSessions,
-						sessions.length,
-						<button
-							type="button"
-							className="lp-section-action lp-new-chat-action"
-							title={t("newChatTip")}
-							aria-label={t("newChat")}
-							onClick={() => {
-								panelSend({ type: "new_chat" });
-								focusComposer();
-							}}
-						>
-							<FiPlus />
-						</button>,
-						renderInlineEntries(uiHistoryActions, "lp-slot-section"),
-					)}
-					{!collapseSessions && (
-						<div
-							className="lp-section-body sessions-scroll"
-							onDoubleClick={handleBlankDoubleClick}
-							onScroll={(e) => {
-								if (visibleSessions.length >= sessions.length) return;
-								const el = e.currentTarget;
-								if (el.scrollHeight - el.scrollTop - el.clientHeight < 180) {
-									setVisibleSessionCount((c) => Math.min(sessions.length, c + 60));
-								}
-							}}
-						>
-							{sessions.length === 0 && <div className="panel-empty">{t("noHistory")}</div>}
-							{visibleSessions.map((s) => {
-								const norm = (v?: string) =>
-									(v ?? "")
-										.trim()
-										.replace(/[\\/]+$/, "")
-										.toLowerCase();
-								const active = currentFile === s.path;
-								const switching = transition?.kind === "session" && norm(transition.target) === norm(s.path);
-								return (
-									<div
-										className="lp-row"
-										key={s.path}
-										onMouseLeave={() => setConfirmDel((k) => (k === `sess:${s.path}` ? null : k))}
-										onContextMenu={(e) => openSessionMenu(e, { id: s.path, kind: "history", label: displayName(s) })}
-									>
-										<button
-											type="button"
-											className={`session-item ${active ? "active" : ""} ${switching ? "switching" : ""}`}
-											title={s.path}
-											disabled={switching}
-											onClick={() => {
-												if (renaming || switching) return;
-												if (!active) panelSend({ type: "switch_session", path: s.path });
-											}}
-										>
-											<span className="session-icon-wrap">
-												{switching ? (
-													<HalfRingSpinner className="session-icon spin" />
-												) : (
-													<FiMessageSquare className="session-icon" />
-												)}
-											</span>
-											<span className="session-info">
-												{renaming === s.path ? (
-													<input
-														autoFocus
-														className="session-rename-input"
-														value={renameDraft}
-														placeholder={t("renameSessionPlaceholder")}
-														onClick={(e) => e.stopPropagation()}
-														onChange={(e) => setRenameDraft(e.target.value)}
-														onKeyDown={(e) => {
-															e.stopPropagation();
-															if (e.key === "Enter" && !e.nativeEvent.isComposing) {
-																const name = renameDraft.trim();
-																if (name) panelSend({ type: "rename_session", path: s.path, name });
-																setRenaming(null);
-															} else if (e.key === "Escape") {
-																setRenaming(null);
-															}
-														}}
-														onBlur={() => setRenaming(null)}
-													/>
-												) : (
-													<span className="session-title">
-														{s.pinned && (
-															<span className="pin-badge" title={t("pinnedConversation")}>
-																📌
-															</span>
-														)}
-														{displayName(s)}
-													</span>
-												)}
-												{renaming === s.path ? null : (
-													<span className="session-sub">
-														{active ? t("current") : t("messageCount", { n: s.messageCount })}
-														{s.source === "tui" && (
-															<span className="session-src" title={t("tuiTip")}>
-																TUI
-															</span>
-														)}
-														{s.parentSessionPath && (
-															<span
-																className="session-src session-fork-badge"
-																title={t("forkedSessionTip", {
-																	parent: (() => {
-																		const normP = norm(s.parentSessionPath).replace(/\\/g, "/");
-																		const pSess = sessions.find((p) => norm(p.path).replace(/\\/g, "/") === normP);
-																		if (pSess) return displayName(pSess);
-																		const base =
-																			s.parentSessionPath.replace(/\\/g, "/").split("/").pop() ?? s.parentSessionPath;
-																		return base.replace(/\.jsonl$/i, "");
-																	})(),
-																})}
-															>
-																{t("forkedSessionBadge")}
-															</span>
-														)}
-													</span>
-												)}
-											</span>
-											<span className={`session-time ${switching ? "switching-pct" : ""}`}>
-												{switching ? `${transition.progress}%` : formatModified(s.modified)}
-											</span>
-										</button>
-										<button
-											type="button"
-											className="lp-del lp-rename"
-											title={t("renameSession")}
-											onClick={(e) => {
-												e.stopPropagation();
-												setConfirmDel(null);
-												setRenameDraft(s.name ?? "");
-												setRenaming(s.path);
-											}}
-										>
-											<FiEdit2 />
-										</button>
-										{delButton(`sess:${s.path}`, t("deleteSession"), t("deleteSessionConfirm"), () => {
-											clearCachedSession(s.path, currentCwd);
-											panelSend({ type: "delete_session", path: s.path });
-										})}
-										{renderInlineEntries(historyRowEntries, "lp-slot-sessions")}
-									</div>
-								);
-							})}
-						</div>
-					)}
-				</div>
-			</>
-		),
+		sessions: null,
 	};
 
 	/** P4：插件自定义分区（kind="view"）：标题栏 + 正文由插件 bundle 挂载（渲染函数由 App 注入，同后台任务面板口径）。 */
