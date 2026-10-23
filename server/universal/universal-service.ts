@@ -71,7 +71,7 @@ export class UniversalAgentService implements EngineService {
 				}
 			}
 			if (typeof this.stateStore?.remember === "function") {
-				this.stateStore.remember(clientId, effectiveCwd);
+				this.stateStore.remember(clientId, effectiveCwd, { restoreRemoved: false });
 			}
 
 			const driver = this.driverFactory(effectiveCwd);

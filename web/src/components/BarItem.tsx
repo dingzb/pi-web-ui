@@ -38,7 +38,6 @@ import { BrowserControl } from "./BrowserControl";
 import { BROWSER_PAGE_TOOL_NAME } from "../../../server/tool-manager.js";
 import type { SoundKind, SoundSettings } from "../sounds";
 import { EnginePicker } from "./EnginePicker";
-import { appUrl } from "../base-url";
 
 export type ViewName = "chat" | "terminal" | "git" | `plugin:${string}`;
 
@@ -354,15 +353,10 @@ export function BarItem({
 				onContextMenu={handleContextMenu}
 				data-bar-item={id}
 			>
-				<img
-					className="brand-logo bar-item-brand-logo bar-item-icon"
-					src={appUrl("/icons/icon-192.png")}
-					alt="pi-web-ui"
-					width={26}
-					height={26}
-					draggable={false}
-				/>
-				<span className="brand-name bar-item-text">{named("pi-web-ui")}</span>
+				<span className="brand-logo bar-item-brand-logo bar-item-icon" aria-hidden="true">
+					X
+				</span>
+				<span className="brand-name bar-item-text">{named("X-FDE")}</span>
 			</span>
 		);
 	}

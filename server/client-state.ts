@@ -799,11 +799,19 @@ export class ClientStateStore {
 	}
 
 	/** Remember which workspace a client last used; bumps its project entry. */
-	remember(clientId: string, cwd: string): void {
+	remember(clientId: string, cwd: string, options: { restoreRemoved?: boolean } = {}): void {
 		const all = this.load();
 		const state = (all[clientId] ??= { projects: [] });
 		this.touchClient(all, clientId);
 		state.lastCwd = cwd;
+		if (
+			options.restoreRemoved === false &&
+			this.getRemovedProjects(clientId).some((p) => normalizePathKey(p) === normalizePathKey(cwd))
+		) {
+			this.save();
+			return;
+		}
+
 		const now = Date.now();
 		const targetKey = normalizePathKey(cwd);
 		state.projects = [

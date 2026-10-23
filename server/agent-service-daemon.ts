@@ -1208,7 +1208,7 @@ export class AgentService {
 					// issue #145 接线提前：首帧 elsewhere 依赖它。
 					this.wireClient(cs, clientId);
 					// Make sure the restored/default workspace appears in the project list.
-					this.stateStore.remember(clientId, cwd);
+					this.stateStore.remember(clientId, cwd, { restoreRemoved: false });
 					if (cwd !== this.cwd) {
 						send({
 							type: "notice",

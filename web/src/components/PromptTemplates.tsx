@@ -55,190 +55,28 @@ interface BuiltinDef {
 	promptKey: I18nKey;
 }
 
-/** 内置模板：覆盖 https://www.aihero.dev/skills 的全部 25 个 skill ——
- *  做真实工程而非「氛围编程」的常用工作流。每个模板是一段可复用的复杂
- *  提示词，模拟对应 skill 的流程（点卡片填入输入框，✏️ 可编辑/删除）。 */
+/** Model workflows shown in the composer template picker. */
 const BUILTIN_DEFS: BuiltinDef[] = [
-	/* Getting Started */
 	{
-		id: "setup-matt-pocock-skills",
-		icon: "🛠",
-		titleKey: "tpl.sk.setup",
-		descKey: "tpl.sk.setup.desc",
-		promptKey: "tpl.sk.setup.prompt",
+		id: "model-development",
+		icon: "",
+		titleKey: "tpl.model.dev",
+		descKey: "tpl.model.dev.desc",
+		promptKey: "tpl.model.dev.prompt",
 	},
 	{
-		id: "ask-matt",
-		icon: "🧭",
-		titleKey: "tpl.sk.ask",
-		descKey: "tpl.sk.ask.desc",
-		promptKey: "tpl.sk.ask.prompt",
-	},
-	/* The Main Flow */
-	{
-		id: "grill-with-docs",
-		icon: "🗣",
-		titleKey: "tpl.sk.grilldocs",
-		descKey: "tpl.sk.grilldocs.desc",
-		promptKey: "tpl.sk.grilldocs.prompt",
+		id: "model-deployment",
+		icon: "",
+		titleKey: "tpl.model.deploy",
+		descKey: "tpl.model.deploy.desc",
+		promptKey: "tpl.model.deploy.prompt",
 	},
 	{
-		id: "to-spec",
-		icon: "📝",
-		titleKey: "tpl.sk.tospec",
-		descKey: "tpl.sk.tospec.desc",
-		promptKey: "tpl.sk.tospec.prompt",
-	},
-	{
-		id: "to-tickets",
-		icon: "🎫",
-		titleKey: "tpl.sk.totickets",
-		descKey: "tpl.sk.totickets.desc",
-		promptKey: "tpl.sk.totickets.prompt",
-	},
-	{
-		id: "implement",
-		icon: "🏗",
-		titleKey: "tpl.sk.implement",
-		descKey: "tpl.sk.implement.desc",
-		promptKey: "tpl.sk.implement.prompt",
-	},
-	{
-		id: "code-review",
-		icon: "🧹",
-		titleKey: "tpl.sk.codeview",
-		descKey: "tpl.sk.codeview.desc",
-		promptKey: "tpl.sk.codeview.prompt",
-	},
-	/* Shaping */
-	{
-		id: "wayfinder",
-		icon: "🗺",
-		titleKey: "tpl.sk.wayfinder",
-		descKey: "tpl.sk.wayfinder.desc",
-		promptKey: "tpl.sk.wayfinder.prompt",
-	},
-	{
-		id: "prototype",
-		icon: "🔬",
-		titleKey: "tpl.sk.prototype",
-		descKey: "tpl.sk.prototype.desc",
-		promptKey: "tpl.sk.prototype.prompt",
-	},
-	{
-		id: "research",
-		icon: "📚",
-		titleKey: "tpl.sk.research",
-		descKey: "tpl.sk.research.desc",
-		promptKey: "tpl.sk.research.prompt",
-	},
-	/* Upkeep */
-	{
-		id: "improve-codebase-architecture",
-		icon: "🏛",
-		titleKey: "tpl.sk.arch",
-		descKey: "tpl.sk.arch.desc",
-		promptKey: "tpl.sk.arch.prompt",
-	},
-	{
-		id: "diagnosing-bugs",
-		icon: "🐛",
-		titleKey: "tpl.sk.debug",
-		descKey: "tpl.sk.debug.desc",
-		promptKey: "tpl.sk.debug.prompt",
-	},
-	{
-		id: "resolving-merge-conflicts",
-		icon: "🔀",
-		titleKey: "tpl.sk.merge",
-		descKey: "tpl.sk.merge.desc",
-		promptKey: "tpl.sk.merge.prompt",
-	},
-	{
-		id: "triage",
-		icon: "🗂",
-		titleKey: "tpl.sk.triage",
-		descKey: "tpl.sk.triage.desc",
-		promptKey: "tpl.sk.triage.prompt",
-	},
-	{
-		id: "wizard",
-		icon: "✨",
-		titleKey: "tpl.sk.wizard",
-		descKey: "tpl.sk.wizard.desc",
-		promptKey: "tpl.sk.wizard.prompt",
-	},
-	/* Productivity */
-	{
-		id: "grill-me",
-		icon: "🔍",
-		titleKey: "tpl.sk.grillme",
-		descKey: "tpl.sk.grillme.desc",
-		promptKey: "tpl.sk.grillme.prompt",
-	},
-	{
-		id: "handoff",
-		icon: "🤝",
-		titleKey: "tpl.sk.handoff",
-		descKey: "tpl.sk.handoff.desc",
-		promptKey: "tpl.sk.handoff.prompt",
-	},
-	{
-		id: "to-questionnaire",
-		icon: "📋",
-		titleKey: "tpl.sk.questionnaire",
-		descKey: "tpl.sk.questionnaire.desc",
-		promptKey: "tpl.sk.questionnaire.prompt",
-	},
-	{
-		id: "teach",
-		icon: "🎓",
-		titleKey: "tpl.sk.teach",
-		descKey: "tpl.sk.teach.desc",
-		promptKey: "tpl.sk.teach.prompt",
-	},
-	{
-		id: "wait-what",
-		icon: "💬",
-		titleKey: "tpl.sk.ww",
-		descKey: "tpl.sk.ww.desc",
-		promptKey: "tpl.sk.ww.prompt",
-	},
-	{
-		id: "writing-for-agents",
-		icon: "📄",
-		titleKey: "tpl.sk.wfa",
-		descKey: "tpl.sk.wfa.desc",
-		promptKey: "tpl.sk.wfa.prompt",
-	},
-	/* Reference */
-	{
-		id: "codebase-design",
-		icon: "🧱",
-		titleKey: "tpl.sk.codesign",
-		descKey: "tpl.sk.codesign.desc",
-		promptKey: "tpl.sk.codesign.prompt",
-	},
-	{
-		id: "domain-modeling",
-		icon: "🏷",
-		titleKey: "tpl.sk.domain",
-		descKey: "tpl.sk.domain.desc",
-		promptKey: "tpl.sk.domain.prompt",
-	},
-	{
-		id: "grilling",
-		icon: "🔥",
-		titleKey: "tpl.sk.grilling",
-		descKey: "tpl.sk.grilling.desc",
-		promptKey: "tpl.sk.grilling.prompt",
-	},
-	{
-		id: "tdd",
-		icon: "🧪",
-		titleKey: "tpl.sk.tdd",
-		descKey: "tpl.sk.tdd.desc",
-		promptKey: "tpl.sk.tdd.prompt",
+		id: "model-analysis",
+		icon: "",
+		titleKey: "tpl.model.analyze",
+		descKey: "tpl.model.analyze.desc",
+		promptKey: "tpl.model.analyze.prompt",
 	},
 ];
 

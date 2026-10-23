@@ -395,37 +395,11 @@ export function DirectoryBrowser({
 		<>
 			<div className={`status-cwd-backdrop ${backdropClassName ?? ""}`.trim()} onClick={onClose} />
 			<div className={`cwd-picker ${className ?? ""}`.trim()} role={role} aria-label={ariaLabel}>
-				{/* 模式切换 Tab（支持远程 SSH 时显示选项卡切换，不支持时仅显示本地目录模式） */}
-				{supportsRemoteSsh ? (
-					<div className="cwd-mode-tabs">
-						<button
-							type="button"
-							className={`cwd-mode-tab ${activeTab === "local" ? "active" : ""}`}
-							onClick={() => setActiveTab("local")}
-						>
-							💻 {t("workspaceModeLocal")}
-						</button>
-						<button
-							type="button"
-							className={`cwd-mode-tab ${activeTab === "remote" ? "active" : ""}`}
-							onClick={() => setActiveTab("remote")}
-						>
-							🌐 {t("workspaceModeRemote")}
-						</button>
-						<button type="button" className="cwd-close" title={t("close")} aria-label={t("close")} onClick={onClose}>
-							<FiX />
-						</button>
-					</div>
-				) : (
-					<div className="cwd-mode-tabs cwd-mode-tabs-single">
-						<div className="cwd-mode-tab active" style={{ cursor: "default" }}>
-							💻 {t("workspaceModeLocal")}
-						</div>
-						<button type="button" className="cwd-close" title={t("close")} aria-label={t("close")} onClick={onClose}>
-							<FiX />
-						</button>
-					</div>
-				)}
+				<div className="cwd-mode-tabs cwd-mode-tabs-single cwd-close-row">
+					<button type="button" className="cwd-close" title={t("close")} aria-label={t("close")} onClick={onClose}>
+						<FiX />
+					</button>
+				</div>
 
 				{/* 本地目录视图 */}
 				{activeTab === "local" && (
@@ -711,7 +685,7 @@ export function DirectoryBrowser({
 									</div>
 								)}
 
-								<div className="cwd-ssh-row" style={{ fontSize: "11px", color: "var(--text-dim)" }}>
+								<div className="cwd-ssh-row cwd-ssh-options">
 									<label style={{ width: "auto" }}>
 										<input
 											type="checkbox"

@@ -23,6 +23,17 @@ describe("ClientStateStore 最近项目删除全局持久化", () => {
 		}
 	});
 
+	it("恢复客户端工作区不会撤销项目删除，手动重新打开才恢复", () => {
+		store.remember("a", "/removed");
+		store.removeProject("a", "/removed");
+		store.remember("b", "/removed", { restoreRemoved: false });
+		const reloaded = new ClientStateStore(file);
+		expect(reloaded.getRemovedProjects("b")).toContain("/removed");
+		expect(reloaded.get("b").projects).toEqual([]);
+		reloaded.remember("b", "/removed");
+		expect(reloaded.getRemovedProjects("b")).not.toContain("/removed");
+	});
+
 	it("在 client A 删除的项目，对新 client B 同样保持删除状态（全局 tombstone）", () => {
 		store.remember("clientA", "/path/to/project1");
 		store.remember("clientA", "/path/to/project2");

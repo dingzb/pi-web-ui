@@ -165,6 +165,9 @@ interface SettingsTerminalBridge {
 }
 
 interface SettingsModalProps {
+	theme?: string | null;
+	themes?: import("../theme").ThemeInfo[];
+	onThemeChange?: (id: string | null) => void;
 	/** Optional direct entry used by the top-bar plugin menu. */
 	initialSection?: "plugins";
 	chat: {
@@ -565,6 +568,7 @@ function PluginLogView({ pluginId }: { pluginId: string }) {
  *  —— 条目全局 id 本身是 `<pluginId>:<itemId>`，所以整串是 `plugin-page:<pluginId>:<itemId>`；
  *  一个插件可以贡献多页，故不用 `plugin-page:<pluginId>`（会撞车）。 */
 type SettingsTab =
+	| "theme"
 	| "models"
 	| "prompt"
 	| "prompt-history"
@@ -678,6 +682,9 @@ function looseEqual(a: unknown, b: unknown): boolean {
 const PENDING_MAX_AGE_MS = 10_000;
 
 export function SettingsModal({
+	theme,
+	themes,
+	onThemeChange,
 	chat,
 	terminal,
 	initialSection,
@@ -1295,6 +1302,7 @@ export function SettingsModal({
 		/** 悬浮提示（插件条目的 `hint`）。 */
 		hint?: string;
 	}[] = [
+		{ id: "theme", icon: <FiAperture />, label: t("theme") },
 		// 模型与服务商（全引擎通用：统一管理 BaseURL、API Key 与自定义中转模型）
 		...(onOpenManageModels
 			? [
@@ -2187,6 +2195,36 @@ export function SettingsModal({
 						)}
 					</nav>
 					<div className="modal-body" ref={bodyRef}>
+						{tab === "theme" && (
+							<section className="set-section">
+								<h3 className="set-section-title">{t("theme")}</h3>
+								<div className="settings-theme-options" role="radiogroup" aria-label={t("theme")}>
+									{[
+										{ id: "white", name: t("themeLight") },
+										{ id: "dark", name: t("themeDefault") },
+										...(themes ?? [])
+											.filter((item) => item.id !== "white" && item.id !== "dark")
+											.map((item) => ({
+												id: item.id,
+												name: !isZhLocale(locale) && item.nameEn ? item.nameEn : item.name,
+											})),
+									].map((item) => (
+										<button
+											type="button"
+											className="settings-theme-option"
+											key={item.id}
+											role="radio"
+											aria-checked={(theme ?? "dark") === item.id}
+											onClick={() => onThemeChange?.(item.id === "dark" ? null : item.id)}
+										>
+											{item.name}
+											{(theme ?? "dark") === item.id && <FiCheck aria-hidden="true" />}
+										</button>
+									))}
+								</div>
+							</section>
+						)}
+
 						{/* ---- models & providers (all engines) ------------------------ */}
 						{tab === "models" && (
 							<div className="set-section">
@@ -6867,11 +6905,6 @@ export function SettingsModal({
 					<div className="settings-status-info">
 						<span className="settings-status-dot" />
 						<span className="settings-status-text">{t("settingsAutoSavedTip")}</span>
-					</div>
-					<div className="settings-action-btns">
-						<button type="button" className="dd-refresh set-close-btn" onClick={handleClose}>
-							{t("close")}
-						</button>
 					</div>
 				</div>
 			</div>

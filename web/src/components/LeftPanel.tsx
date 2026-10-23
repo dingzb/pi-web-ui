@@ -6,11 +6,12 @@ import {
 	FiChevronRight,
 	FiChevronUp,
 	FiEdit2,
+	FiEdit,
 	FiFolder,
 	FiFolderPlus,
 	FiMessageSquare,
 	FiMoreVertical,
-	FiPlus,
+	FiSettings,
 	FiTrash2,
 	FiX,
 } from "react-icons/fi";
@@ -85,6 +86,7 @@ interface LeftPanelProps {
 	collapsible?: boolean;
 	/** Fired when the user clicks the collapse button. */
 	onToggleCollapse?: () => void;
+	onOpenSettings?: () => void;
 
 	// ---- 宿主 UI 扩展点（issue #146）：由 App 用 buildUiSlots() 算好后传进来 ----
 	/** `contextmenu.session` 槽位的最终条目（host 内置 + 插件贡献）。左栏只负责**打开**
@@ -267,6 +269,7 @@ export const LeftPanel = memo(function LeftPanel({
 	active,
 	collapsible,
 	onToggleCollapse,
+	onOpenSettings,
 	pathCompletions,
 	uiContextSession,
 	uiLeftSessions,
@@ -785,7 +788,7 @@ export const LeftPanel = memo(function LeftPanel({
 		return [...conversations, ...filteredElsewhere];
 	}, [conversations, elsewhere]);
 	// P2：分区顺序与显隐（宏观来自宿主 leftpanel.sections 的合并结果；布局页可隐藏 / 调序）。
-	const sectionPlan = planLeftSections(uiSections).filter((p) => p.key !== "sessions");
+	const sectionPlan = planLeftSections(uiSections).filter((p) => p.key !== "sessions" && p.key !== "convs");
 	const shownPlan = sectionPlan.filter((p) => p.shown);
 	const collapsedOf = (k: LpSectionKey): boolean =>
 		k === "projects"
@@ -1005,12 +1008,36 @@ export const LeftPanel = memo(function LeftPanel({
 		[panelSend],
 	);
 
+	const projectSessions = useMemo(() => {
+		const key = (path: string) => path.replace(/\\/g, "/").replace(/\/+$/, "").toLowerCase();
+		const rows = new Map<string, SessionSummary & { conversationId?: string; isStreaming?: boolean }>(
+			sessions.map((row) => [key(row.path), row]),
+		);
+		for (const conv of conversations) {
+			if (conv.isSubagent || conv.messageCount === 0) continue;
+			const path = conv.sessionFile ?? `conversation:${conv.id}`;
+			const old = rows.get(key(path));
+			rows.set(key(path), {
+				...old,
+				path,
+				cwd: conv.cwd,
+				firstMessage: conv.title,
+				displayName: conv.title,
+				name: conv.title,
+				messageCount: conv.messageCount,
+				modified: old?.modified ?? 0,
+				conversationId: conv.id,
+				isStreaming: conv.isStreaming,
+			});
+		}
+		return [...rows.values()];
+	}, [sessions, conversations]);
 	const renderProjectSessions = (projectPath: string) => (
 		<div className="lp-project-sessions">
-			{!sessions.some((s) => (s.cwd ?? currentCwd) === projectPath) && (
+			{!projectSessions.some((s) => (s.cwd ?? currentCwd) === projectPath) && (
 				<div className="panel-empty">{t("noHistory")}</div>
 			)}
-			{sessions
+			{projectSessions
 				.filter((s) => (s.cwd ?? currentCwd) === projectPath)
 				.slice(0, visibleSessionCount)
 				.map((s) => {
@@ -1019,7 +1046,7 @@ export const LeftPanel = memo(function LeftPanel({
 							.trim()
 							.replace(/[\\/]+$/, "")
 							.toLowerCase();
-					const active = currentFile === s.path;
+					const active = s.conversationId ? activeConversationId === s.conversationId : currentFile === s.path;
 					const switching = transition?.kind === "session" && norm(transition.target) === norm(s.path);
 					return (
 						<div
@@ -1035,11 +1062,14 @@ export const LeftPanel = memo(function LeftPanel({
 								disabled={switching}
 								onClick={() => {
 									if (renaming || switching) return;
-									if (!active) panelSend({ type: "switch_session", path: s.path });
+									if (!active) {
+										if (s.conversationId) panelSend({ type: "switch_conversation", id: s.conversationId });
+										else panelSend({ type: "switch_session", path: s.path });
+									}
 								}}
 							>
 								<span className="session-icon-wrap">
-									{switching ? (
+									{switching || s.isStreaming ? (
 										<HalfRingSpinner className="session-icon spin" />
 									) : (
 										<FiMessageSquare className="session-icon" />
@@ -1058,7 +1088,11 @@ export const LeftPanel = memo(function LeftPanel({
 												e.stopPropagation();
 												if (e.key === "Enter" && !e.nativeEvent.isComposing) {
 													const name = renameDraft.trim();
-													if (name) panelSend({ type: "rename_session", path: s.path, name });
+													if (name) {
+														if (s.conversationId)
+															panelSend({ type: "rename_conversation", id: s.conversationId, name });
+														else panelSend({ type: "rename_session", path: s.path, name });
+													}
 													setRenaming(null);
 												} else if (e.key === "Escape") {
 													setRenaming(null);
@@ -1122,10 +1156,14 @@ export const LeftPanel = memo(function LeftPanel({
 								<FiEdit2 />
 							</button>
 							{delButton(`sess:${s.path}`, t("deleteSession"), t("deleteSessionConfirm"), () => {
-								clearCachedSession(s.path, s.cwd ?? currentCwd);
-								panelSend({ type: "delete_session", path: s.path });
+								if (s.path.startsWith("conversation:") && s.conversationId)
+									panelSend({ type: "dismiss_conversation", id: s.conversationId });
+								else {
+									clearCachedSession(s.path, s.cwd ?? currentCwd);
+									panelSend({ type: "delete_session", path: s.path });
+								}
 							})}
-							{renderInlineEntries(historyRowEntries, "lp-slot-sessions")}
+							{renderInlineEntries(s.conversationId ? runningRowEntries : historyRowEntries, "lp-slot-sessions")}
 						</div>
 					);
 				})}
@@ -1146,18 +1184,6 @@ export const LeftPanel = memo(function LeftPanel({
 						toggleProjects,
 						projects.length,
 						<>
-							<button
-								type="button"
-								className="lp-section-action lp-new-chat-action"
-								title={t("newChatTip")}
-								aria-label={t("newChat")}
-								onClick={() => {
-									panelSend({ type: "new_chat" });
-									focusComposer();
-								}}
-							>
-								<FiPlus />
-							</button>
 							{onOpenSandboxModal && (
 								<button
 									type="button"
@@ -1191,7 +1217,7 @@ export const LeftPanel = memo(function LeftPanel({
 							onScroll={(e) => {
 								const el = e.currentTarget;
 								if (el.scrollHeight - el.scrollTop - el.clientHeight < 180)
-									setVisibleSessionCount((n) => Math.min(sessions.length, n + 60));
+									setVisibleSessionCount((n) => Math.min(projectSessions.length, n + 60));
 							}}
 						>
 							{projects.map((p) => {
@@ -1728,17 +1754,50 @@ export const LeftPanel = memo(function LeftPanel({
 
 	return (
 		<aside ref={panelRef as React.RefObject<HTMLDivElement>} className="panel panel-left lp-panel">
+			<div className="lp-nav-header">
+				<span className="lp-brand">X-FDE</span>
+			</div>
 			{collapsible && onToggleCollapse && (
 				<button type="button" className="panel-collapse-btn" title={t("collapsePanel")} onClick={onToggleCollapse}>
 					<FiChevronLeft />
 				</button>
 			)}
-			{shownPlan.map(({ key }) => (
-				<Fragment key={key}>
-					{renderSection(key)}
-					{sashAfter.get(key) ?? null}
-				</Fragment>
-			))}
+			<button
+				type="button"
+				className="lp-new-chat-action"
+				aria-label={t("newChat")}
+				title={t("newChatTip")}
+				onClick={() => {
+					panelSend({ type: "new_chat" });
+					focusComposer();
+				}}
+			>
+				<FiEdit />
+				<span>{t("newChat")}</span>
+			</button>
+			<div
+				className="lp-nav-scroll"
+				onScroll={(e) => {
+					const el = e.currentTarget;
+					if (el.scrollHeight - el.scrollTop - el.clientHeight < 180)
+						setVisibleSessionCount((n) => Math.min(projectSessions.length, n + 60));
+				}}
+			>
+				{shownPlan.map(({ key }) => (
+					<Fragment key={key}>
+						{renderSection(key)}
+						{sashAfter.get(key) ?? null}
+					</Fragment>
+				))}
+			</div>
+			{onOpenSettings && (
+				<div className="lp-nav-footer">
+					<button type="button" className="lp-settings-action" onClick={onOpenSettings}>
+						<FiSettings aria-hidden="true" />
+						<span>{t("settingsTitle")}</span>
+					</button>
+				</div>
+			)}
 			<ProjectPicker
 				open={projectPickerOpen}
 				currentCwd={currentCwd}

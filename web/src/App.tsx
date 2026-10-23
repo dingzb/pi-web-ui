@@ -100,18 +100,7 @@ import { appUrl } from "./base-url";
 import type { ClientMessage, CommandDef, PromptAttachment, UiMessage } from "./types";
 import { isZhLocale, useT, useI18n } from "./i18n";
 import { QUICK_PHRASE_DEFAULTS } from "./quick-phrases";
-import {
-	FiAlertCircle,
-	FiAlertTriangle,
-	FiBookmark,
-	FiCheck,
-	FiChevronLeft,
-	FiChevronRight,
-	FiInfo,
-	FiTrash2,
-	FiUpload,
-	FiX,
-} from "react-icons/fi";
+import { FiAlertCircle, FiAlertTriangle, FiBookmark, FiCheck, FiInfo, FiTrash2, FiUpload, FiX } from "react-icons/fi";
 import { LuFlaskConical } from "react-icons/lu";
 import type { Notice } from "./use-chat";
 import { fileToProcessedImage, isRasterImage, type ProcessedImage } from "./image-paste";
@@ -280,17 +269,6 @@ function ResizeHandle({ side, width, onResize }: { side: PanelSide; width: numbe
 	);
 }
 
-/** 面板折叠后悬浮在边缘的展开按钮：贴在主区边缘，点击恢复面板。
- *  只在桌面端出现（移动端抽屉由顶栏按钮控制）。 */
-function PanelRail({ side, onClick }: { side: PanelSide; onClick: () => void }) {
-	const t = useT();
-	return (
-		<button type="button" className={`panel-rail panel-rail-${side}`} title={t("expandPanel")} onClick={onClick}>
-			{side === "left" ? <FiChevronRight /> : <FiChevronLeft />}
-		</button>
-	);
-}
-
 /** 顶栏视图：内置三个 + 每个已装插件一个 `plugin:<id>`。 */
 type ViewName = "chat" | "terminal" | "git" | `plugin:${string}`;
 
@@ -370,7 +348,7 @@ export function App() {
 	const projectTitle = useProjectTitle();
 	useEffect(() => {
 		const name = projectTitle ? projectNameFromCwd(cwd) : "";
-		document.title = name ? `${name} — pi-web-ui` : t("docTitle");
+		document.title = name ? `${name} — X-FDE` : t("docTitle");
 	}, [cwd, projectTitle, t]);
 	const [attachments, setAttachments] = useState<PendingAttachment[]>([]);
 	// 宿主注入的待发附件（浏览器元素拾取扩展的截图 → window.__piWebUiHost.compose）：
@@ -997,8 +975,7 @@ export function App() {
 	// Wide chat column (client-local, default off).
 	const wide = useWideChat();
 	const hideModelRow = useHideModelRow();
-	const isMinimalEmpty =
-		!!chat.settings?.minimalNewChat && (chat.state?.messages?.length ?? 0) === 0 && !chat.state?.streamingMessage;
+	const isMinimalEmpty = (chat.state?.messages?.length ?? 0) === 0 && !chat.state?.streamingMessage;
 	// Background-task panel (AI-started servers — stop individually or all).
 	const [bgTasksOpen, setBgTasksOpen] = useState(false);
 	// Global search panel (sessions / projects / workspace files).
@@ -1995,6 +1972,10 @@ export function App() {
 				</div>
 			)}
 			<TopBar
+				leftPanelOpen={isMobile ? drawer === "left" : !leftCollapsed}
+				rightPanelOpen={isMobile ? drawer === "right" : !rightCollapsed}
+				onToggleLeftPanel={() => (isMobile ? setDrawer(drawer === "left" ? null : "left") : toggleLeft())}
+				onToggleRightPanel={() => (isMobile ? setDrawer(drawer === "right" ? null : "right") : toggleRight())}
 				chat={chat}
 				terminal={terminal}
 				view={view}
@@ -2184,14 +2165,18 @@ export function App() {
 						onToggleZenMode={toggleZenMode}
 					/>
 					<div className={`view-pane ${view === "chat" ? "" : "hidden"}`}>
-						{!isMobile && leftCollapsed && <PanelRail side="left" onClick={toggleLeft} />}
 						<div
 							className={`panel-drawer drawer-left ${drawer === "left" ? "open" : ""}${
 								isMobile ? "" : leftCollapsed ? " hidden" : ""
 							}`}
 						>
 							<LeftPanel
-								collapsible={!isMobile}
+								onOpenSettings={() => {
+									setDrawer(null);
+									setSettingsInitialSection(undefined);
+									setSettingsOpen(true);
+								}}
+								collapsible={false}
 								onToggleCollapse={toggleLeft}
 								panelSend={panelSend}
 								active={!isMobile || drawer === "left"}
@@ -2356,8 +2341,8 @@ export function App() {
 										</div>
 									)}
 									<MessageList
-										uiMessageActions={uiSlots["message.actions"]}
-										uiContextMessage={uiSlots["contextmenu.message"]}
+										uiMessageActions={uiSlots["message.actions"].filter((item) => item.id !== "host:msg-fork")}
+										uiContextMessage={uiSlots["contextmenu.message"].filter((item) => item.id !== "host:msg-ctx-fork")}
 										/* 工具调用卡片的工具名右键菜单（contextmenu.toolcall）：条目已合并好，
 										   工具卡只管开菜单 + 分派它自己的 host:tool-info。 */
 										uiContextToolCall={uiSlots["contextmenu.toolcall"]}
@@ -2409,7 +2394,7 @@ export function App() {
 
 							{/* 目标条宿主槽：只包 GoalBar。折叠态时槽高 0（药丸脱离文档流），
 							    展开态就是原来那一条（.goalbar 自带 margin）。 */}
-							{chat.settings?.goalModeEnabled !== false && (
+							{chat.goal.goal !== null && chat.settings?.goalModeEnabled !== false && (
 								<div className="goalbar-slot">
 									<GoalBar
 										goal={chat.goal}
@@ -2633,6 +2618,7 @@ export function App() {
 										: chat.state?.plan
 								}
 							/>
+							{isMinimalEmpty && <h1 className="chat-welcome">{t("chatWelcome")}</h1>}
 							<ChatInput
 								composerLeading={uiSlots["composer.leading"]}
 								composerActions={uiSlots["composer.actions"]}
@@ -2657,14 +2643,7 @@ export function App() {
 								onManageModels={openManageModels}
 								onSent={clearAttachments}
 								quickPhrases={chat.settings?.quickPhrases ?? []}
-								quickPhrasesEnabled={
-									zenMode
-										? false
-										: (chat.settings?.quickPhrasesEnabled ?? true) &&
-											(!chat.settings?.minimalNewChat ||
-												(chat.state?.messages?.length ?? 0) > 0 ||
-												!!chat.state?.streamingMessage)
-								}
+								quickPhrasesEnabled={false}
 								recallDrafts={recallDrafts}
 								dshPermCurrent={chat.state?.permission ?? null}
 								dshPermOptions={chat.dshPermission?.options ?? undefined}
@@ -2678,6 +2657,29 @@ export function App() {
 								sessionId={chat.state?.sessionId ?? ""}
 								preserveDraftAcrossConversations={chat.settings?.preserveDraftAcrossConversations ?? false}
 							/>
+							<div className="composer-status">
+								<FooterBar
+									chat={chat}
+									bottombarItems={uiSlots["bottombar"].filter(
+										(item) => !["host:engine", "host:host-metrics", "host:cost"].includes(item.id),
+									)}
+									onUiAction={onUiAction}
+									onOpenSettings={() => {
+										setSettingsInitialSection(undefined);
+										setSettingsOpen(true);
+									}}
+									onViewChange={(v: ViewName) => {
+										terminalOpenRequested.current = v === "terminal" && chat.terminals.length === 0;
+										if (terminalOpenRequested.current && createShell()) {
+											terminalOpenRequested.current = false;
+										}
+										setView(v);
+										setDrawer(null);
+									}}
+									onOpenGlobalSearch={() => setGlobalSearchOpen(true)}
+									onOpenBgTasks={() => setBgTasksOpen(true)}
+								/>
+							</div>
 						</main>
 						{!isMobile && !rightCollapsed && <ResizeHandle side="right" width={rightWidth} onResize={resizeRight} />}
 						<div
@@ -2686,7 +2688,7 @@ export function App() {
 							}`}
 						>
 							<RightPanel
-								collapsible={!isMobile}
+								collapsible={false}
 								onToggleCollapse={toggleRight}
 								panelSend={panelSend}
 								files={chat.files}
@@ -2710,7 +2712,6 @@ export function App() {
 								send={send}
 							/>
 						</div>
-						{!isMobile && rightCollapsed && <PanelRail side="right" onClick={toggleRight} />}
 					</div>
 					<div className={`view-pane ${view === "terminal" ? "" : "hidden"}`}>
 						<Suspense fallback={null}>
@@ -2788,25 +2789,7 @@ export function App() {
 					/>
 				</div>
 			</TemplateProvider>
-			<FooterBar
-				chat={chat}
-				bottombarItems={uiSlots["bottombar"]}
-				onUiAction={onUiAction}
-				onOpenSettings={() => {
-					setSettingsInitialSection(undefined);
-					setSettingsOpen(true);
-				}}
-				onViewChange={(v: ViewName) => {
-					terminalOpenRequested.current = v === "terminal" && chat.terminals.length === 0;
-					if (terminalOpenRequested.current && createShell()) {
-						terminalOpenRequested.current = false;
-					}
-					setView(v);
-					setDrawer(null);
-				}}
-				onOpenGlobalSearch={() => setGlobalSearchOpen(true)}
-				onOpenBgTasks={() => setBgTasksOpen(true)}
-			/>
+
 			{previewFile && (
 				<FilePreview
 					file={previewFile}
@@ -2869,6 +2852,9 @@ export function App() {
 			)}
 			{settingsOpen && (
 				<SettingsModal
+					theme={theme}
+					themes={themes}
+					onThemeChange={switchTheme}
 					chat={chat}
 					terminal={terminal}
 					initialSection={settingsInitialSection}

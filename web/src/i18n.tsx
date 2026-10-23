@@ -17,7 +17,7 @@ const STORAGE_KEY = "pi-web-ui:lang";
 
 export const zh = {
 	/* common */
-	docTitle: "pi-web-ui — pi 编码智能体",
+	docTitle: "X-FDE — X-FDE 编码智能体",
 	cancel: "取消",
 	ok: "确定",
 	save: "保存",
@@ -98,7 +98,7 @@ export const zh = {
 	settingsEngineSection: "智能体引擎",
 	settingsEngineHint:
 		"支持零重启秒级热切换：切换后本标签页立即接入目标引擎，原引擎后台运行中的对话不会中断；也可打开多个浏览器标签页同时分别进行 pi 与 DSH 对话。",
-	settingsEnginePiTitle: "PI",
+	settingsEnginePiTitle: "X-FDE",
 	settingsEnginePiDesc: "完整插件生态、扩展与技能、工具延迟加载、审批门禁、目标模式 2.0 与子代理",
 	settingsEngineDshTitle: "DSH",
 	settingsEngineDshDesc: "轻量级代码编辑循环、hashline 补丁引擎、Agent 预设与三档权限控制，基于通用底座驱动",
@@ -162,7 +162,7 @@ export const zh = {
 	foldersNotSupported: "不支持直接拖入文件夹，请展开后选择文件",
 	placeholderStreaming: "智能体正在工作中…回车插队发送，或点「排队」等回答结束后发送",
 	placeholderStreamingQueued: "智能体正在工作中…回车或点「排队」，回答完全结束后发送（本引擎不支持插队）",
-	placeholderIdle: "给 pi 发送消息 — Enter 发送，/ 查看命令",
+	placeholderIdle: "给 X-FDE 发送消息 — Enter 发送，/ 查看命令",
 	placeholderConnecting: "正在连接服务器…",
 	stopAgent: "停止智能体",
 	stop: "停止",
@@ -299,6 +299,7 @@ export const zh = {
 	collapseSection: "折叠",
 	expandSection: "展开",
 	emptyChat: "空对话",
+	chatWelcome: "我们要做什么？",
 
 	/* message edit */
 	reaskDirectly: "直接重问",
@@ -525,7 +526,7 @@ export const zh = {
 	updateAvailable: "发现新版本 v{version}",
 	updateJustPublished: "v{version} 刚刚发布，npm 缓存可能尚未同步——若未检测到新版本，请稍后重新检查",
 	updateNow: "在终端中更新",
-	updateTabTitle: "更新 pi-web-ui",
+	updateTabTitle: "更新 X-FDE",
 	updateTerminalHint:
 		"点击后会在可见终端中运行 npm i -g pi-web-ui@latest；完成后重启服务生效（pi-web-ui server restart）。",
 	/* 桌面壳应用内更新（issue #180）：包内服务不受 npm 全局包影响 */
@@ -575,8 +576,6 @@ export const zh = {
 
 	/* right panel */
 	computer: "此电脑",
-	workspaceModeLocal: "本地目录",
-	workspaceModeRemote: "远程 (SSH)",
 	sshHost: "主机地址",
 	sshPort: "端口",
 	sshUser: "用户名",
@@ -802,7 +801,7 @@ export const zh = {
 	ttsVoiceAuto: "自动（跟随界面语言）",
 	ttsVoiceOnline: "在线",
 	ttsUnavailable: "当前浏览器不支持语音合成",
-	ttsPreviewLine: "你好，这是 pi-web-ui 的语音播报试听。",
+	ttsPreviewLine: "你好，这是 X-FDE 的语音播报试听。",
 	ttsAnnounceDone: "任务已完成",
 	ttsAnnounceQuestion: "等待你的输入",
 	ttsAnnounceError: "出现错误",
@@ -986,6 +985,18 @@ export const zh = {
 	searchClose: "关闭（Esc）",
 
 	/* 提示词模板（新对话空态推荐卡片） */
+	"tpl.model.dev": "模型开发",
+	"tpl.model.dev.desc": "梳理需求、数据与训练方案",
+	"tpl.model.dev.prompt":
+		"请协助我开展模型开发：先确认任务目标、数据情况和评估标准，再梳理模型选型、训练与验证方案。信息不足时先向我提问。",
+	"tpl.model.deploy": "模型部署",
+	"tpl.model.deploy.desc": "规划环境、服务与上线验证",
+	"tpl.model.deploy.prompt":
+		"请协助我部署模型：先确认模型格式、目标环境、硬件资源和服务需求，再给出部署步骤、验证方法及回滚方案。执行前先确认关键条件。",
+	"tpl.model.analyze": "模型状态情况分析",
+	"tpl.model.analyze.desc": "分析运行指标、异常与改进方向",
+	"tpl.model.analyze.prompt":
+		"请协助我分析模型状态：先确认模型版本、运行环境、指标和日志，评估效果、延迟、吞吐及资源占用，定位异常并给出有证据支持的改进建议。不要推断未提供的数据。",
 	"tpl.title": "提示词模板",
 	"tpl.hint": "点击卡片直接填入输入框，✏️ 可编辑或删除 · 也能新增自己的模板",
 	"tpl.clickCard": "点击填入输入框",
@@ -1033,106 +1044,6 @@ export const zh = {
 	"tpl.restoreTip": "撤掉你的修改，恢复内置默认",
 
 	/* 内置模板：覆盖 https://www.aihero.dev/skills 全部 25 个 skill */
-	"tpl.sk.setup": "仓库初始化",
-	"tpl.sk.setup.desc": "让仓库了解它的构建与约定",
-	"tpl.sk.setup.prompt":
-		"请先扫描这个仓库，建立「其他工作流都能用」的基础上下文，输出一份简明报告：\n\n1. 项目类型、技术栈与目录结构\n2. 构建 / 测试 / 运行 / 格式化的具体命令\n3. 代码约定与命名规范\n4. 任务 / issue 的存放位置与格式\n5. 目前已知的坑或遗留问题\n\n先只报告，不修改任何文件。",
-	"tpl.sk.ask": "技能导航",
-	"tpl.sk.ask.desc": "告诉我该用哪个流程",
-	"tpl.sk.ask.prompt":
-		"我先描述当前要解决的情况，你先判断最适合的工作流（需求澄清 / 拆解计划 / 测试驱动 / 排错 / 架构 / 审查 / 交接等），说明为什么推荐它、会怎么做，等我确认后按它执行。",
-	"tpl.sk.grilldocs": "需求拷问·落档",
-	"tpl.sk.grilldocs.desc": "边盘问需求边记录决策",
-	"tpl.sk.grilldocs.prompt":
-		"动手前，请用拷问的方式向我盘问这个计划（一次一个问题），直到达成共识。同时把过程中的关键术语和已定决策记录下来（例如写入 CONTEXT.md 或 ADR 文件），让后续所有工作都基于同一套「共享语言」。每个问题先给出你的推荐答案。",
-	"tpl.sk.tospec": "转规格说明",
-	"tpl.sk.tospec.desc": "把讨论结果整理成规格书",
-	"tpl.sk.tospec.prompt":
-		"请把我们在对话中已经达成的共识，整理成一份结构化的规格说明书：\n\n1. 背景与目标\n2. 明确的目标与非目标\n3. 用户与使用场景\n4. 边界条件与失败场景\n5. 验收标准（怎样算完成）\n6. 接口 / 数据结构概要\n\n先输出规格让我评审，确认后再继续。",
-	"tpl.sk.totickets": "拆工单",
-	"tpl.sk.totickets.desc": "把规格拆成可构建的小任务",
-	"tpl.sk.totickets.prompt":
-		"请把这份规格说明拆成一组小工单，供逐个构建：\n\n1. 每个工单足够小、可独立验收\n2. 标注依赖顺序（哪些必须先做）\n3. 每个工单含：做什么、验收标准、涉及文件\n4. 识别出可并行的工单\n\n先输出工单列表，我确认顺序后再执行。",
-	"tpl.sk.implement": "规格落地",
-	"tpl.sk.implement.desc": "按规格测试优先实现",
-	"tpl.sk.implement.prompt":
-		"请按这份规格说明实现，测试优先：\n\n1. 先为每个工单写会失败的测试（覆盖正常、边界、错误分支）\n2. 用最小实现让测试通过\n3. 重构并保持测试通过\n4. 逐工单推进，每完成一个简要汇报\n\n最后对照验收标准逐条确认。",
-	"tpl.sk.codeview": "代码审查",
-	"tpl.sk.codeview.desc": "对照规格与标准审查 diff",
-	"tpl.sk.codeview.prompt":
-		"请审查最近改动的 diff：\n\n1. 对照规格说明，实现是否完全覆盖、有无偏差\n2. 正确性：边界、空值、并发与时序\n3. 安全：输入校验、注入、敏感信息\n4. 性能与可读性：是否遵循项目约定\n5. 测试：关键路径是否有覆盖\n\n按严重程度分级列出问题，每条给出具体修改建议。",
-	"tpl.sk.wayfinder": "大任务地图",
-	"tpl.sk.wayfinder.desc": "把大工程画成决策地图",
-	"tpl.sk.wayfinder.prompt":
-		"这是一个大型任务。请先把它画成一张「决策地图」：\n\n1. 拆出所有需要做出的决策点及其依赖关系\n2. 为每个决策点列出选项、权衡与你的推荐\n3. 标注哪些可以并行推进、哪些必须串行\n4. 输出一份路径规划，我逐项确认后再动手。",
-	"tpl.sk.prototype": "快速原型",
-	"tpl.sk.prototype.desc": "用一次性代码验证设计假设",
-	"tpl.sk.prototype.prompt":
-		"请针对这个设计问题写一个最小原型来验证假设：\n\n1. 只验证关键假设，不做完整实现\n2. 用最简单的方式（可硬编码、可牺牲边界情况）\n3. 运行并告诉我结论：假设成立吗？有哪些权衡？\n4. 验证完的原型可以删除，或等确认后再正式实现。",
-	"tpl.sk.research": "有据调研",
-	"tpl.sk.research.desc": "读一手来源给出带引用的答案",
-	"tpl.sk.research.prompt":
-		"请调研这个问题，优先读一手来源（官方文档 / 源码 / 规范）：\n\n1. 给出带来源链接的答案\n2. 明确区分：事实、合理推断、仍不确定\n3. 列出主要选项及其权衡\n4. 避免用二手内容拼凑，找不到就直接说没找到。",
-	"tpl.sk.arch": "架构体检",
-	"tpl.sk.arch.desc": "找出值得重构的模块（报告）",
-	"tpl.sk.arch.prompt":
-		"对整个代码库做一次架构体检：\n\n1. 找出「深模块被破坏」的迹象：过长的函数与类、明显的重复、命名混乱、隐藏的耦合\n2. 按严重程度与影响范围分级，输出一份可视化改进报告\n3. 对每一项给出最小可行的重构方案与理由\n4. 先报告再动手，重构前确认范围。",
-	"tpl.sk.debug": "系统化排错",
-	"tpl.sk.debug.desc": "从可复现的失败开始诊断",
-	"tpl.sk.debug.prompt":
-		"请系统化诊断这个 bug：\n\n1. 先复现，给出可复现的步骤或输入（没有就先造最小复现）\n2. 二分或排除法缩小范围到具体模块\n3. 提出假设，用日志 / 断言 / 最小样例验证，不凭感觉改\n4. 定位根因后解释，再做最小修复\n5. 补回归测试防止复发。",
-	"tpl.sk.merge": "解决合并冲突",
-	"tpl.sk.merge.desc": "逐个 hunk 完成合并/变基",
-	"tpl.sk.merge.prompt":
-		"请帮我解决这个合并 / 变基冲突：\n\n1. 逐个冲突 hunk 处理，先读懂双方各自的意图\n2. 选择或合并出保留正确语义的代码，不盲目取一边\n3. 处理完运行测试与构建确认没问题\n4. 最后总结每处冲突的取舍原因。",
-	"tpl.sk.triage": "工单分流",
-	"tpl.sk.triage.desc": "把原始 issue 整理成可领取的工作",
-	"tpl.sk.triage.prompt":
-		"请把这些原始 issue / 反馈整理成可执行的工作项：\n\n1. 去重、合并相关的条目\n2. 分类（bug / 功能 / 改进 / 问题）\n3. 按影响与紧急度标优先级\n4. 每个工作项补上：复现信息或期望、验收标准\n\n输出整理后的清单。",
-	"tpl.sk.wizard": "设置向导",
-	"tpl.sk.wizard.desc": "生成引导人类完成设置的脚本",
-	"tpl.sk.wizard.prompt":
-		"请为一个需要手动操作的设置流程生成一个引导向导（脚本或文档）：\n\n1. 一步步引导，每步说明为什么\n2. 每步带校验，输错给出可操作的提示\n3. 支持撤销 / 回退到上一步\n4. 结束时做一次自检并给出验证方法。",
-	"tpl.sk.grillme": "需求拷问",
-	"tpl.sk.grillme.desc": "动手前盘问对齐想法",
-	"tpl.sk.grillme.prompt":
-		"开始之前，请不遗余力地盘问我这个想法的每一个方面，直到我们达成共识（一次只问一个问题，每个问题先给推荐答案）：\n\n1. 目标与非目标\n2. 用户与场景\n3. 边界与失败模式\n4. 约束与依赖\n5. 验收标准\n\n达成共识后再给实现计划，等确认再写代码。",
-	"tpl.sk.handoff": "交接",
-	"tpl.sk.handoff.desc": "把长会话写成交接文档",
-	"tpl.sk.handoff.prompt":
-		"请把当前会话整理成一份交接文档，让另一个 agent / 同事能无缝继续：\n\n1. 背景与目标\n2. 已完成的工作与关键决策（附原因）\n3. 未完成项与下一步\n4. 已知风险与待确认问题\n5. 如何验证当前状态（命令等）\n\n输出为结构化文档。",
-	"tpl.sk.questionnaire": "转问卷",
-	"tpl.sk.questionnaire.desc": "把开放问题变成可填问卷",
-	"tpl.sk.questionnaire.prompt":
-		"请把需要别人提供的信息整理成一份可填写的问卷：\n\n1. 每个问题说明背景和用途\n2. 标注必填 / 选填\n3. 给出示例答案降低理解成本\n4. 分组排序，先简单后复杂\n\n输出一份文档，对方可以照着填。",
-	"tpl.sk.teach": "持续学习",
-	"tpl.sk.teach.desc": "跨多次会话循序渐进学习",
-	"tpl.sk.teach.prompt":
-		"请按循序渐进的方式教我：\n\n1. 先定学习路径和目标\n2. 一次只讲一小节，讲完给个小练习\n3. 基于上一节的内容递进，主动提问确认理解\n4. 每节结束总结要点\n\n适合跨多次会话推进。",
-	"tpl.sk.ww": "说人话",
-	"tpl.sk.ww.desc": "用大白话重讲刚才的解释",
-	"tpl.sk.ww.prompt":
-		"请把刚才的解释用最简单的语言重新讲一遍：\n\n1. 避免术语，必须用时先给一句话定义\n2. 用类比或具体例子说明\n3. 明确指出哪部分仍是猜测 / 不确定\n4. 用最短的话说完核心意思。",
-	"tpl.sk.wfa": "写给 agent 的文档",
-	"tpl.sk.wfa.desc": "按 agent 易读的原则写文档",
-	"tpl.sk.wfa.prompt":
-		"请按「写给 agent 阅读」的原则写这份文档 / 说明：\n\n1. 目标与使用场景写在最前\n2. 指令具体、可验证，避免歧义和空话\n3. 给正反例帮助理解\n4. 结构化：标题、步骤、清单\n5. 标注哪些是硬性要求、哪些是可选。",
-	"tpl.sk.codesign": "深模块设计",
-	"tpl.sk.codesign.desc": "用深模块原则审查与设计",
-	"tpl.sk.codesign.prompt":
-		"请用「深模块」设计原则审查 / 设计：\n\n1. 识别模块对外暴露的接口是否比内部实现更简单\n2. 找出把复杂度泄漏到外部的模块\n3. 给出每个模块的职责边界与改进方案\n4. 平衡内聚与复用，避免过度抽象\n\n输出审查结论与重构建议。",
-	"tpl.sk.domain": "领域建模",
-	"tpl.sk.domain.desc": "打磨项目用词并写下来",
-	"tpl.sk.domain.prompt":
-		"请帮我梳理这个项目的领域语言：\n\n1. 找出核心术语及当前叫法\n2. 识别同词异义 / 异词同义造成的混乱\n3. 统一推荐用词，写进术语表\n4. 说明每个术语的边界（不是什么）\n\n输出一份领域术语表。",
-	"tpl.sk.grilling": "拷问流程",
-	"tpl.sk.grilling.desc": "用拷问压测一个计划",
-	"tpl.sk.grilling.prompt":
-		"请对下面这个计划做压力测试（拷问）：\n\n1. 逐项检查假设：如果它是错的会怎样？\n2. 找漏洞：边界、失败模式、依赖、时序\n3. 质疑决策：为什么这样？有没有更简单的路？\n4. 每次只提出一个最尖锐的问题，等我回答\n\n直到这个计划经得起推敲。",
-	"tpl.sk.tdd": "测试驱动",
-	"tpl.sk.tdd.desc": "红-绿-重构的规则",
-	"tpl.sk.tdd.prompt":
-		"请用 TDD（红-绿-重构）完成：\n\n1. 先写会失败的测试，覆盖正常路径、边界与错误分支\n2. 用最小实现让测试通过\n3. 重构并保持测试通过\n\n避免三种反模式：与实现耦合的测试、空洞断言（永远为真）、横向切片（只测表面）。每步汇报并运行测试。",
 
 	/* tool call block */
 	error: "出错",
@@ -1465,7 +1376,6 @@ export const zh = {
 	markerGroupRename: "重命名标记 conv/rename",
 	markerGroupAction: "建议操作标记 action/suggest",
 	actionSuggestions: "建议操作",
-	actionSuggestionsTip: "点击直接发送：{prompt}",
 	markerRenameTip: "[[conv:rename:新标题]] 重命名当前对话（标题 ≤80 字；在回复第一条消息末尾根据情况重命名）",
 	terminalToolsEnabled: "启用持久终端工具",
 	settingsTerminalToolsDesc:
@@ -2091,7 +2001,7 @@ export const zh = {
 
 	/* app */
 	loadingSession: "正在加载会话…",
-	connectingServer: "正在连接 pi-web-ui 服务器…",
+	connectingServer: "正在连接 X-FDE 服务器…",
 
 	/* 语言包（下载） */
 	localePacks: "语言包",
@@ -2303,7 +2213,7 @@ export const zh = {
 
 export const en: Record<keyof typeof zh, string> = {
 	/* common */
-	docTitle: "pi-web-ui — pi coding agent",
+	docTitle: "X-FDE — X-FDE coding agent",
 	cancel: "Cancel",
 	ok: "OK",
 	save: "Save",
@@ -2385,7 +2295,7 @@ export const en: Record<keyof typeof zh, string> = {
 	settingsEngineSection: "Agent Engine",
 	settingsEngineHint:
 		"Zero-restart hot switch: switches this tab immediately while keeping background runs in the other engine alive; you can also open multiple tabs to run pi and DSH conversations simultaneously.",
-	settingsEnginePiTitle: "PI",
+	settingsEnginePiTitle: "X-FDE",
 	settingsEnginePiDesc:
 		"Full plugin ecosystem, extensions & skills, lazy tool loading, approval rules, Goal Mode 2.0 & subagents",
 	settingsEngineDshTitle: "DSH",
@@ -2455,7 +2365,7 @@ export const en: Record<keyof typeof zh, string> = {
 	placeholderStreaming: "The agent is working… press Enter to steer, or click Queue to send after the reply finishes",
 	placeholderStreamingQueued:
 		"The agent is working… press Enter or click Queue — delivered after the reply finishes (this engine cannot steer)",
-	placeholderIdle: "Message pi — Enter to send, / for commands",
+	placeholderIdle: "Message X-FDE — Enter to send, / for commands",
 	placeholderConnecting: "Connecting to server…",
 	stopAgent: "Stop agent",
 	stop: "Stop",
@@ -2598,6 +2508,7 @@ export const en: Record<keyof typeof zh, string> = {
 	collapseSection: "Collapse",
 	expandSection: "Expand",
 	emptyChat: "Empty chat",
+	chatWelcome: "What can we work on?",
 
 	/* message edit */
 	reaskDirectly: "Re-ask",
@@ -2830,7 +2741,7 @@ export const en: Record<keyof typeof zh, string> = {
 	updateJustPublished:
 		"v{version} was just published — npm cache may lag; if the new version isn't detected yet, re-check in a moment",
 	updateNow: "Update in terminal",
-	updateTabTitle: "Update pi-web-ui",
+	updateTabTitle: "Update X-FDE",
 	updateTerminalHint:
 		"Clicking runs npm i -g pi-web-ui@latest in a visible terminal; restart the service afterwards to take effect (pi-web-ui server restart).",
 	/* In-app desktop updates (issue #180): the bundled server ignores the global npm install */
@@ -2881,8 +2792,6 @@ export const en: Record<keyof typeof zh, string> = {
 
 	/* right panel */
 	computer: "This PC",
-	workspaceModeLocal: "Local Directory",
-	workspaceModeRemote: "Remote (SSH)",
 	sshHost: "Host",
 	sshPort: "Port",
 	sshUser: "Username",
@@ -3112,7 +3021,7 @@ export const en: Record<keyof typeof zh, string> = {
 	ttsVoiceAuto: "Auto (follow UI language)",
 	ttsVoiceOnline: "online",
 	ttsUnavailable: "Speech synthesis is not supported in this browser",
-	ttsPreviewLine: "Hello, this is the pi-web-ui voice preview.",
+	ttsPreviewLine: "Hello, this is the X-FDE voice preview.",
 	ttsAnnounceDone: "Task finished",
 	ttsAnnounceQuestion: "Waiting for your input",
 	ttsAnnounceError: "An error occurred",
@@ -3297,6 +3206,18 @@ export const en: Record<keyof typeof zh, string> = {
 	searchClose: "Close (Esc)",
 
 	/* prompt templates (new-conversation suggestion cards) */
+	"tpl.model.dev": "Model development",
+	"tpl.model.dev.desc": "Define the task, data, and training plan",
+	"tpl.model.dev.prompt":
+		"Help me develop a model. Clarify the task, available data, and evaluation criteria, then outline model selection, training, and validation. Ask about missing information first.",
+	"tpl.model.deploy": "Model deployment",
+	"tpl.model.deploy.desc": "Plan the environment, serving, and release checks",
+	"tpl.model.deploy.prompt":
+		"Help me deploy a model. Confirm the model format, target environment, hardware, and serving requirements, then propose deployment steps, validation, and rollback. Confirm key conditions before execution.",
+	"tpl.model.analyze": "Model status analysis",
+	"tpl.model.analyze.desc": "Review metrics, issues, and improvements",
+	"tpl.model.analyze.prompt":
+		"Help me analyze model status. Confirm the version, environment, metrics, and logs, assess quality, latency, throughput, and resource usage, then identify issues and suggest evidence-based improvements. Do not invent missing data.",
 	"tpl.title": "Prompt templates",
 	"tpl.hint": "Click a card to fill the input; ✏️ to edit or delete; add your own too",
 	"tpl.clickCard": "Click to fill the input",
@@ -3342,106 +3263,6 @@ export const en: Record<keyof typeof zh, string> = {
 	"tpl.restoreTip": "Discard your edits and restore the built-in default",
 
 	/* built-in templates: all 25 skills from https://www.aihero.dev/skills */
-	"tpl.sk.setup": "Repo setup",
-	"tpl.sk.setup.desc": "Give the repo a baseline that other workflows can use",
-	"tpl.sk.setup.prompt":
-		"Scan this repository and build the baseline context other workflows rely on, then report concisely:\n\n1. Project type, tech stack and directory layout\n2. Concrete commands for build / test / run / format\n3. Code conventions and naming rules\n4. Where tasks / issues live and their format\n5. Known pitfalls or leftover issues\n\nReport only — do not modify any files.",
-	"tpl.sk.ask": "Skill navigator",
-	"tpl.sk.ask.desc": "Tell me which workflow to use",
-	"tpl.sk.ask.prompt":
-		"I'll describe the situation I'm in; you decide the best workflow (clarify requirements / plan & execute / TDD / debugging / architecture / review / handoff, etc.), explain why you recommend it and how you'd run it, then execute it after I confirm.",
-	"tpl.sk.grilldocs": "Grill & record",
-	"tpl.sk.grilldocs.desc": "Interview the plan and record decisions",
-	"tpl.sk.grilldocs.prompt":
-		"Before starting, grill me about this plan (one question at a time) until we reach shared understanding. Record key terms and settled decisions as you go (e.g. into CONTEXT.md or an ADR file) so all later work shares one vocabulary. Give your recommended answer with each question.",
-	"tpl.sk.tospec": "To spec",
-	"tpl.sk.tospec.desc": "Turn the agreed discussion into a written spec",
-	"tpl.sk.tospec.prompt":
-		"Turn the consensus we reached into a structured specification:\n\n1. Background and goals\n2. Explicit goals and non-goals\n3. Users and usage scenarios\n4. Edge cases and failure modes\n5. Acceptance criteria (what counts as done)\n6. Interface / data-shape overview\n\nOutput the spec for my review first, then continue only after I confirm.",
-	"tpl.sk.totickets": "To tickets",
-	"tpl.sk.totickets.desc": "Split the spec into small buildable tickets",
-	"tpl.sk.totickets.prompt":
-		"Split this spec into a set of small tickets an agent can build one by one:\n\n1. Each ticket small enough to be independently accepted\n2. Annotate dependency order (what must come first)\n3. Each ticket has: what to do, acceptance criteria, files involved\n4. Flag which tickets can run in parallel\n\nOutput the ticket list; I'll confirm the order before you execute.",
-	"tpl.sk.implement": "Implement spec",
-	"tpl.sk.implement.desc": "Build the finished spec, test-first",
-	"tpl.sk.implement.prompt":
-		"Implement per this spec, test-first:\n\n1. Write failing tests for each ticket first (happy path, edges, error branches)\n2. Make them pass with the minimal implementation\n3. Refactor while keeping tests green\n4. Proceed ticket by ticket, reporting briefly after each\n\nFinally check every acceptance criterion explicitly.",
-	"tpl.sk.codeview": "Code review",
-	"tpl.sk.codeview.desc": "Review the diff against the spec and your standards",
-	"tpl.sk.codeview.prompt":
-		"Review the recently changed diff:\n\n1. Against the spec: is the implementation complete and faithful?\n2. Correctness: edges, nulls, concurrency and timing\n3. Security: input validation, injection, sensitive data\n4. Performance & readability: does it follow project conventions?\n5. Tests: are critical paths covered?\n\nList issues by severity, each with a concrete suggestion.",
-	"tpl.sk.wayfinder": "Wayfinder",
-	"tpl.sk.wayfinder.desc": "Chart a large effort as a map of decisions",
-	"tpl.sk.wayfinder.prompt":
-		"This is a large task. First chart it as a decision map:\n\n1. List every decision point and its dependencies\n2. For each decision give options, trade-offs and your recommendation\n3. Mark what can run in parallel vs. what must be sequential\n4. Output a path plan; I'll confirm each item before you start.",
-	"tpl.sk.prototype": "Prototype",
-	"tpl.sk.prototype.desc": "Answer a design question with throwaway code",
-	"tpl.sk.prototype.prompt":
-		"Write a minimal prototype to validate the design assumption:\n\n1. Validate only the key assumption, not the full implementation\n2. Use the simplest means (hard-coding and skipped edge cases are fine)\n3. Run it and tell me the verdict: does the assumption hold? trade-offs?\n4. The prototype can be deleted, or made production-ready only after I confirm.",
-	"tpl.sk.research": "Research",
-	"tpl.sk.research.desc": "Get a cited answer from primary sources",
-	"tpl.sk.research.prompt":
-		"Research this question, preferring primary sources (official docs / source / specs):\n\n1. Give an answer with source links\n2. Distinguish facts, reasonable inference, and what's still uncertain\n3. List the main options and their trade-offs\n4. Don't stitch together secondary content; say so if you can't find it.",
-	"tpl.sk.arch": "Architecture review",
-	"tpl.sk.arch.desc": "Find the modules worth refactoring (report)",
-	"tpl.sk.arch.prompt":
-		"Do an architecture review of the whole codebase:\n\n1. Find signs of broken deep modules: oversized functions/classes, duplication, poor naming, hidden coupling\n2. Prioritize improvements by severity and blast radius; produce a visual report\n3. For each item give the minimal viable refactor with rationale\n4. Report before changing anything; confirm scope before refactoring.",
-	"tpl.sk.debug": "Diagnose bugs",
-	"tpl.sk.debug.desc": "Diagnose from a repro that fails",
-	"tpl.sk.debug.prompt":
-		"Diagnose this bug systematically:\n\n1. Reproduce it first (build a minimal repro if none exists)\n2. Narrow to a specific module via bisection or elimination\n3. Form hypotheses and verify with logs / assertions / a minimal sample — no guessing\n4. Once the root cause is found, explain it, then make the minimal fix\n5. Add a regression test to prevent recurrence.",
-	"tpl.sk.merge": "Resolve merge conflicts",
-	"tpl.sk.merge.desc": "Finish a merge or rebase conflict hunk by hunk",
-	"tpl.sk.merge.prompt":
-		"Help me resolve this merge / rebase conflict:\n\n1. Handle each conflict hunk, reading both sides' intent first\n2. Choose or merge to keep correct semantics — don't blindly pick one side\n3. Run tests and build afterwards to confirm\n4. Finally summarize the rationale for each resolution.",
-	"tpl.sk.triage": "Triage",
-	"tpl.sk.triage.desc": "Sort raw issues into work someone can pick up",
-	"tpl.sk.triage.prompt":
-		"Turn these raw issues / feedback into actionable work items:\n\n1. Deduplicate and merge related entries\n2. Categorize (bug / feature / improvement / question)\n3. Prioritize by impact and urgency\n4. For each item add: repro info or expectation, acceptance criteria\n\nOutput the cleaned list.",
-	"tpl.sk.wizard": "Setup wizard",
-	"tpl.sk.wizard.desc": "Generate a script that walks a human through setup",
-	"tpl.sk.wizard.prompt":
-		"Create a guided wizard (script or doc) for a manual setup flow:\n\n1. Guide step by step, explaining why at each step\n2. Validate each step; on wrong input give actionable hints\n3. Support undo / going back a step\n4. End with a self-check and how to verify.",
-	"tpl.sk.grillme": "Grill me",
-	"tpl.sk.grillme.desc": "Align on an idea before committing",
-	"tpl.sk.grillme.prompt":
-		"Before starting, interview me relentlessly about every aspect of this idea until we reach shared understanding (one question at a time, each with your recommended answer):\n\n1. Goals and non-goals\n2. Users and scenarios\n3. Edge cases and failure modes\n4. Constraints and dependencies\n5. Acceptance criteria\n\nThen give an implementation plan and wait for my confirmation before writing code.",
-	"tpl.sk.handoff": "Handoff",
-	"tpl.sk.handoff.desc": "Write up a long session so another agent can continue",
-	"tpl.sk.handoff.prompt":
-		"Turn this session into a handoff doc so another agent / teammate can continue seamlessly:\n\n1. Background and goals\n2. Work done and key decisions (with reasons)\n3. Outstanding items and next steps\n4. Known risks and open questions\n5. How to verify current state (commands, etc.)\n\nOutput as a structured document.",
-	"tpl.sk.questionnaire": "To questionnaire",
-	"tpl.sk.questionnaire.desc": "Turn open questions into a doc someone fills in",
-	"tpl.sk.questionnaire.prompt":
-		"Turn the info you need from someone into a fillable questionnaire:\n\n1. Explain the background and purpose of each question\n2. Mark required / optional\n3. Give example answers to lower friction\n4. Group and order: easy first, hard later\n\nOutput a doc they can fill in directly.",
-	"tpl.sk.teach": "Teach",
-	"tpl.sk.teach.desc": "Learn a topic across sessions that build on each other",
-	"tpl.sk.teach.prompt":
-		"Teach me this topic incrementally:\n\n1. First set a learning path and goal\n2. Teach one small section at a time, then a quick exercise\n3. Build on the previous section and ask questions to confirm understanding\n4. Summarize key points at the end of each section\n\nWorks well across multiple sessions.",
-	"tpl.sk.ww": "Wait, what?",
-	"tpl.sk.ww.desc": "Say the last explanation again in plain English",
-	"tpl.sk.ww.prompt":
-		"Re-explain what you just said in the simplest terms:\n\n1. Avoid jargon; define any term you must use in one sentence\n2. Use an analogy or concrete example\n3. Be clear about what is still guesswork / uncertain\n4. Keep the core point as short as possible.",
-	"tpl.sk.wfa": "Writing for agents",
-	"tpl.sk.wfa.desc": "Write docs that follow agent-friendly principles",
-	"tpl.sk.wfa.prompt":
-		"Write this doc / explanation following “written for agents to read” principles:\n\n1. Put the goal and usage up front\n2. Make instructions concrete and verifiable — no vagueness\n3. Give positive and negative examples\n4. Structure with headings, steps and checklists\n5. Mark what's required vs. optional.",
-	"tpl.sk.codesign": "Deep-module design",
-	"tpl.sk.codesign.desc": "Review & design with deep-module principles",
-	"tpl.sk.codesign.prompt":
-		"Review / design using the “deep module” principle:\n\n1. Check whether each module's public interface is simpler than its implementation\n2. Find modules that leak complexity outward\n3. Give responsibility boundaries and improvement plans\n4. Balance cohesion and reuse without over-abstracting\n\nOutput the review conclusions and refactor suggestions.",
-	"tpl.sk.domain": "Domain modeling",
-	"tpl.sk.domain.desc": "Sharpen the words a project uses and write them down",
-	"tpl.sk.domain.prompt":
-		"Help me clean up this project's domain language:\n\n1. Find the core terms and their current spellings\n2. Spot confusion from same-word-different-meaning / different-word-same-meaning\n3. Recommend one canonical term each, into a glossary\n4. State each term's boundary (what it is not)\n\nOutput a domain glossary.",
-	"tpl.sk.grilling": "Grilling",
-	"tpl.sk.grilling.desc": "Stress-test a plan with an interview",
-	"tpl.sk.grilling.prompt":
-		"Stress-test this plan with an interview:\n\n1. Check each assumption: what if it's wrong?\n2. Hunt for holes: edges, failure modes, dependencies, timing\n3. Challenge decisions: why this way? is there a simpler path?\n4. Ask one sharp question at a time and wait for my answer\n\nKeep going until the plan holds up.",
-	"tpl.sk.tdd": "Test-driven",
-	"tpl.sk.tdd.desc": "The rules of the red-green-refactor loop",
-	"tpl.sk.tdd.prompt":
-		"Implement using TDD (red-green-refactor):\n\n1. First write failing tests covering the happy path, edge cases and error branches\n2. Make them pass with the minimal implementation\n3. Refactor while keeping tests green\n\nAvoid three test anti-patterns: tests coupled to the implementation, tautological assertions (always true), and horizontal slicing (surface only). Report after each step and run the tests.",
 
 	/* tool call block */
 	error: "Error",
@@ -3784,7 +3605,6 @@ export const en: Record<keyof typeof zh, string> = {
 	markerGroupRename: "conv/rename — rename chat",
 	markerGroupAction: "action/suggest — suggested actions",
 	actionSuggestions: "Suggested actions",
-	actionSuggestionsTip: "Click to send: {prompt}",
 	markerRenameTip:
 		"[[conv:rename:Title]] renames the current conversation (≤80 chars; rename at the end of the first reply)",
 	terminalToolsEnabled: "Enable persistent terminal tools",
@@ -4453,7 +4273,7 @@ export const en: Record<keyof typeof zh, string> = {
 
 	/* app */
 	loadingSession: "Loading session…",
-	connectingServer: "Connecting to pi-web-ui server…",
+	connectingServer: "Connecting to X-FDE server…",
 
 	/* language packs (downloadable) */
 	localePacks: "Language packs",

@@ -67,7 +67,14 @@ function mountLeftPanel(overrides: Record<string, unknown> = {}) {
 			),
 		);
 	});
-	return { container, sent };
+	return {
+		container,
+		sent,
+		rerender: (updates: Record<string, unknown>) => {
+			Object.assign(props, updates);
+			act(() => root!.render(createElement(LanguageProvider, null, createElement(LeftPanel as any, props))));
+		},
+	};
 }
 
 afterEach(() => {
@@ -306,11 +313,11 @@ describe("LeftPanel P1：分区标题栏 / 项目行 / 项目右键插件位", (
 		});
 		const pick = (sel: string) => container.querySelector(`${sel} .lp-section-actions .lp-slot-section .lp-slot-btn`);
 		expect(pick(".panel-projects")?.getAttribute("aria-label")).toBe("PA");
-		expect(pick(".panel-convs")?.getAttribute("aria-label")).toBe("RA");
+		expect(pick(".panel-convs")).toBeNull();
 		expect(container.querySelector('.panel-projects [aria-label="HA"]')).toBeTruthy();
 		// 宿主「管理项目」按钮仍在，插件按钮紧随其后
 		const projActions = container.querySelector(".panel-projects .lp-section-actions");
-		expect(projActions?.firstElementChild?.classList.contains("lp-new-chat-action")).toBe(true);
+		expect(container.querySelector(".lp-panel > .lp-new-chat-action")).toBeTruthy();
 	});
 
 	it("分区标题栏无插件条目时不留占位（标题栏 DOM 与旧版一致）", () => {
@@ -389,7 +396,7 @@ describe("LeftPanel P2：分区顺序 / 显隐 / 分隔条 / 行内槽位拆分"
 	const runningConv = [{ id: "c1", title: "run", cwd: "/test", messageCount: 1, isStreaming: true, isSubagent: false }];
 	/** 分区在 DOM 里的先后（只看直接子节点，分隔条不计入）。 */
 	const sectionOrder = (container: HTMLElement) =>
-		Array.from(container.querySelectorAll<HTMLElement>(".lp-panel > .lp-section")).map((el) =>
+		Array.from(container.querySelectorAll<HTMLElement>(".lp-nav-scroll > .lp-section")).map((el) =>
 			el.classList.contains("panel-projects")
 				? "projects"
 				: el.classList.contains("panel-convs")
@@ -406,13 +413,13 @@ describe("LeftPanel P2：分区顺序 / 显隐 / 分隔条 / 行内槽位拆分"
 			conversations: runningConv,
 			uiSections: [hostSection("host:lp-history"), hostSection("host:lp-projects"), hostSection("host:lp-running")],
 		});
-		expect(sectionOrder(container)).toEqual(["projects", "convs"]);
+		expect(sectionOrder(container)).toEqual(["projects"]);
 	});
 
 	it("隐藏的分区不渲染，分隔条按剩余展开分区重新配对", () => {
 		setAppGlobals({ cwd: "/test", ready: true, status: "open", workspaceRoots: [] });
 		const all = mountLeftPanel({ projects: oneProject, conversations: runningConv });
-		expect(all.container.querySelectorAll(".lp-sash")).toHaveLength(1);
+		expect(all.container.querySelectorAll(".lp-sash")).toHaveLength(0);
 		all.container.remove();
 		act(() => root!.unmount());
 		root = null;
@@ -426,18 +433,18 @@ describe("LeftPanel P2：分区顺序 / 显隐 / 分隔条 / 行内槽位拆分"
 				hostSection("host:lp-history"),
 			],
 		});
-		expect(sectionOrder(container)).toEqual(["convs"]);
+		expect(sectionOrder(container)).toEqual([]);
 		expect(container.querySelectorAll(".lp-sash")).toHaveLength(0);
 	});
 
-	it("默认显示项目对话与运行对话两个分区、一条分隔条", () => {
+	it("默认只显示合并的项目对话分区，不显示运行分区与分隔条", () => {
 		setAppGlobals({ cwd: "/test", ready: true, status: "open", workspaceRoots: [] });
 		const { container } = mountLeftPanel({ projects: oneProject, conversations: runningConv });
-		expect(sectionOrder(container)).toEqual(["projects", "convs"]);
-		expect(container.querySelectorAll(".lp-sash")).toHaveLength(1);
+		expect(sectionOrder(container)).toEqual(["projects"]);
+		expect(container.querySelectorAll(".lp-sash")).toHaveLength(0);
 	});
 
-	it("运行行与历史行各用自己的行内槽位；leftpanel.sessions 两边都有", () => {
+	it("项目内运行行与历史行各用自己的行内槽位", () => {
 		setAppGlobals({ cwd: "/test", ready: true, status: "open", workspaceRoots: [] });
 		const mk = (slot: string, id: string) => ({
 			id: `plug:x:${id}`,
@@ -461,60 +468,50 @@ describe("LeftPanel P2：分区顺序 / 显隐 / 分隔条 / 行内槽位拆分"
 			Array.from(container.querySelectorAll<HTMLElement>(`${sel} .lp-slot-sessions .lp-slot-btn`)).map((b) =>
 				b.getAttribute("aria-label"),
 			);
-		expect(labels(".panel-convs")).toEqual(["s", "r"]);
-		expect(labels(".lp-project-sessions")).toEqual(["s", "h"]);
+		expect(labels(".panel-convs")).toEqual([]);
+		expect(labels(".lp-project-sessions")).toEqual(["s", "h", "s", "r"]);
 	});
 });
 
-describe("LeftPanel P3：插件运行条目（运行分区末尾，仅展示）", () => {
-	const pluginGroups = [
-		{
-			pluginId: "mailer",
-			pluginName: "邮件同步",
-			items: [
-				{ id: "job-1", title: "同步收件箱", hint: "3/10", status: "running", icon: "📬", action: "mailer:open" },
-				{ id: "job-2", title: "归档旧邮件", status: "error" },
+describe("运行对话并入项目", () => {
+	it("合并去重并直接切换运行态，显示流式状态", () => {
+		setAppGlobals({ cwd: "/test", ready: true, status: "open", workspaceRoots: [] });
+		const { container, sent, rerender } = mountLeftPanel({
+			conversations: [
+				{
+					id: "c-live",
+					title: "直播消息",
+					cwd: "/test",
+					sessionFile: "session-1.jsonl",
+					messageCount: 4,
+					isStreaming: true,
+					isSubagent: false,
+				},
 			],
-		},
-	];
-
-	it("只有插件条目、没有对话时运行分区也出现，标题计数含插件条目", () => {
-		setAppGlobals({ cwd: "/test", ready: true, status: "open", workspaceRoots: [] });
-		const { container } = mountLeftPanel({ conversations: [], uiPluginRunning: pluginGroups });
-		const convs = container.querySelector(".panel-convs");
-		expect(convs).not.toBeNull();
-		expect(convs?.querySelector(".lp-section-title-text")?.textContent).toBe("运行的对话 (2)");
-		expect(container.querySelectorAll(".lp-plugin-group")).toHaveLength(1);
-		expect(container.querySelectorAll(".lp-plugin-item")).toHaveLength(2);
-		expect(convs?.querySelector(".lp-plugin-group .panel-conv-group-title")?.textContent).toBe("插件 · 邮件同步");
-	});
-
-	it("点击带 action 的条目：把所属分组与条目交给 onPluginRunningAction；无 action 的带 is-static", () => {
-		setAppGlobals({ cwd: "/test", ready: true, status: "open", workspaceRoots: [] });
-		const onPluginRunningAction = vi.fn();
-		const { container } = mountLeftPanel({ conversations: [], uiPluginRunning: pluginGroups, onPluginRunningAction });
-		const items = container.querySelectorAll<HTMLButtonElement>(".lp-plugin-item");
-		expect(items[0]!.classList.contains("is-static")).toBe(false);
-		expect(items[1]!.classList.contains("is-static")).toBe(true);
-		act(() => items[0]!.click());
-		expect(onPluginRunningAction).toHaveBeenCalledTimes(1);
-		const [group, item] = onPluginRunningAction.mock.calls[0]!;
-		expect((group as { pluginId: string }).pluginId).toBe("mailer");
-		expect((item as { id: string }).id).toBe("job-1");
-	});
-
-	it("状态圆点带类名（running / done / error 三种）", () => {
-		setAppGlobals({ cwd: "/test", ready: true, status: "open", workspaceRoots: [] });
-		const { container } = mountLeftPanel({ conversations: [], uiPluginRunning: pluginGroups });
-		expect(container.querySelector(".lp-plugin-dot.st-running")).not.toBeNull();
-		expect(container.querySelector(".lp-plugin-dot.st-error")).not.toBeNull();
-	});
-
-	it("没有插件条目（不传或空数组）时 DOM 里不出现插件分组", () => {
-		setAppGlobals({ cwd: "/test", ready: true, status: "open", workspaceRoots: [] });
-		const a = mountLeftPanel({ conversations: [] });
-		expect(a.container.querySelector(".panel-convs")).toBeNull();
-		expect(a.container.querySelector(".lp-plugin-group")).toBeNull();
+		});
+		expect(container.querySelector(".panel-convs")).toBeNull();
+		const rows = container.querySelectorAll<HTMLButtonElement>(".lp-project-sessions .session-item");
+		expect(rows).toHaveLength(1);
+		expect(rows[0].textContent).toContain("直播消息");
+		expect(rows[0].querySelector(".spin")).toBeTruthy();
+		act(() => rows[0].click());
+		expect(sent).toContainEqual({ type: "switch_conversation", id: "c-live" });
+		rerender({
+			conversations: [
+				{
+					id: "c-live",
+					title: "已完成的最终消息",
+					cwd: "/test",
+					sessionFile: "session-1.jsonl",
+					messageCount: 5,
+					isStreaming: false,
+					isSubagent: false,
+				},
+			],
+		});
+		expect(container.querySelectorAll(".lp-project-sessions .session-item")).toHaveLength(1);
+		expect(container.querySelector(".lp-project-sessions")?.textContent).toContain("已完成的最终消息");
+		expect(container.querySelector(".lp-project-sessions .spin")).toBeNull();
 	});
 });
 

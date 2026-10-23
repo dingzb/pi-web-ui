@@ -33,7 +33,6 @@ import { SaveImageDialog } from "./SaveImageDialog";
 import { SelectionQuoteButton } from "./SelectionQuoteButton";
 import { TextQuoteCard } from "./TextQuoteCard";
 import { splitQuotedPrompt } from "../../../server/text-quote.js";
-import { appSend } from "../app-globals";
 import { resolveMessageIdForJump } from "../session-url";
 
 /** Stable shared empty map — passing this (instead of a fresh Map) lets
@@ -1503,32 +1502,6 @@ export function MessageList({
 						onRecallQueued={onRecallQueued}
 					/>
 				))}
-				{state.actionSuggestions && state.actionSuggestions.length > 0 && (
-					<div className="action-suggestions" aria-label={t("actionSuggestions")}>
-						<div className="action-suggestions-list">
-							{state.actionSuggestions.map((action) => (
-								<button
-									key={action.id}
-									type="button"
-									className="action-suggestion-chip"
-									title={
-										action.prompt !== action.label ? t("actionSuggestionsTip", { prompt: action.prompt }) : action.label
-									}
-									disabled={state.isStreaming}
-									onClick={() => {
-										scrollToBottom();
-										appSend({ type: "prompt", text: action.prompt });
-									}}
-								>
-									<span className="action-suggestion-label">{action.label}</span>
-									<span className="action-suggestion-icon" aria-hidden="true">
-										↵
-									</span>
-								</button>
-							))}
-						</div>
-					</div>
-				)}
 			</div>
 			{!stickBottom && (
 				<button

@@ -21,7 +21,14 @@ import {
 	FiVolume2,
 } from "react-icons/fi";
 import { GoTriangleDown } from "react-icons/go";
-import { LuFlaskConical, LuMessageSquareDashed } from "react-icons/lu";
+import {
+	LuPanelLeftOpen,
+	LuPanelLeftClose,
+	LuPanelRightOpen,
+	LuPanelRightClose,
+	LuFlaskConical,
+	LuMessageSquareDashed,
+} from "react-icons/lu";
 import type { ChatState, UpdateAllItem } from "../use-chat";
 import type { CommandDef } from "../types";
 import { buildUpdateCommand } from "../update-command";
@@ -66,7 +73,6 @@ import { desktopReleasesUrl, useDesktopUpdater } from "../desktop-updater";
 import { BarItem } from "./BarItem";
 import { EnginePicker } from "./EnginePicker";
 import { WindowControls } from "./WindowControls";
-import { appUrl } from "../base-url";
 
 /** 「安装全局引擎」按钮的目标（issue #321）：buildUpdateCommand 对 pi-core 生成
  *  `npm i -g <name>@latest`，装完重启服务即由 resolve-global-sdk 自动切到更新的那份。 */
@@ -192,6 +198,10 @@ interface TopBarProps {
 	uiContextTopbar?: UiSlotEntry[];
 	/** Open a side panel as a mobile drawer ("left" = history, "right" = files). */
 	onOpenPanel: (side: "left" | "right") => void;
+	leftPanelOpen?: boolean;
+	rightPanelOpen?: boolean;
+	onToggleLeftPanel?: () => void;
+	onToggleRightPanel?: () => void;
 	/** Open the settings panel (system prompt / skills / extensions / presets). */
 	onOpenSettings: () => void;
 	/** Open settings directly at UI plugins → marketplace. */
@@ -227,6 +237,10 @@ interface TopBarProps {
 }
 
 export function TopBar({
+	leftPanelOpen,
+	rightPanelOpen,
+	onToggleLeftPanel,
+	onToggleRightPanel,
 	chat,
 	terminal,
 	view,
@@ -1016,15 +1030,10 @@ export function TopBar({
 	const hostNodes: Record<string, ReactNode> = {
 		"host:brand": (
 			<span className="brand">
-				<img
-					className="brand-logo"
-					src={appUrl("/icons/icon-192.png")}
-					alt="pi-web-ui"
-					width={26}
-					height={26}
-					draggable={false}
-				/>
-				<span className="brand-name">pi-web-ui</span>
+				<span className="brand-logo" aria-hidden="true">
+					X
+				</span>
+				<span className="brand-name">X-FDE</span>
 			</span>
 		),
 		// 打开项目：切整个工作区（set_cwd），与视图无关 —— 终端 / Git / 插件视图里同样常驻可点。
@@ -1531,7 +1540,30 @@ export function TopBar({
 	 * 返回 null 的条目**不占位**。这就是顶栏的全部内容 —— 没有第二阶段的分组/重排。
 	 */
 	const flowItems: { id: string; entry: UiSlotEntry | null; node: ReactNode }[] = [];
+	// Keep the header focused on the current workspace; omit the action/tab strip.
+	const hiddenHeaderActions = new Set([
+		"host:history",
+		"host:files",
+		"host:chat",
+		"host:terminal",
+		"host:git",
+		"host:plugins",
+		"host:search",
+		"host:browser",
+		"host:tasks",
+		"host:zen-mode",
+		"host:settings",
+		"host:sound",
+		"host:language",
+		"host:theme",
+		"host:update",
+		"host:github",
+		"host:new-chat",
+		"host:new-ephemeral-chat",
+		"host:new-sandbox",
+	]);
 	for (const it of topEntries) {
+		if (hiddenHeaderActions.has(it.id)) continue;
 		if (it.entry?.hidden) continue; // uiPrimary 已滤过 hidden；这里只防脏数据（插件 arrange 会改）
 		if (isTabGatedOff(it.id)) continue;
 		let node: ReactNode = null;
@@ -1719,6 +1751,17 @@ export function TopBar({
 		<header className={`topbar${hideTopbarText ? " no-labels" : ""}`} data-pi-anchor="topbar">
 			{/* 单一扁直流：所有条目同级（没有按种类包裹的容器，也没有两端贴边的例外）。
 			    两个 spacer 把条目分成 start / center / end 三段 —— 就是布局页里的「对齐方向」。 */}
+			{view === "chat" && (
+				<button
+					type="button"
+					className="header-sidebar-toggle"
+					aria-label={t(leftPanelOpen ? "collapsePanel" : "expandPanel")}
+					aria-expanded={leftPanelOpen}
+					onClick={onToggleLeftPanel ?? (() => onOpenPanel("left"))}
+				>
+					{leftPanelOpen ? <LuPanelLeftClose /> : <LuPanelLeftOpen />}
+				</button>
+			)}
 			<div className="topbar-flow" ref={flowRef} role="toolbar" aria-label={t("viewSwitch")}>
 				{segStart.map((it) => (
 					<Fragment key={it.id}>{it.node}</Fragment>
@@ -1739,6 +1782,17 @@ export function TopBar({
 					<Fragment key={it.id}>{it.node}</Fragment>
 				))}
 			</div>
+			{view === "chat" && (
+				<button
+					type="button"
+					className="header-sidebar-toggle"
+					aria-label={t(rightPanelOpen ? "collapsePanel" : "expandPanel")}
+					aria-expanded={rightPanelOpen}
+					onClick={onToggleRightPanel ?? (() => onOpenPanel("right"))}
+				>
+					{rightPanelOpen ? <LuPanelRightClose /> : <LuPanelRightOpen />}
+				</button>
+			)}
 			{/* 溢出菜单现在只要**顶栏有东西**就常驻：它除了「隐藏/放不下的条目」，还兼着「编辑图标」
 			    这个入口 —— 所有条目都放得下时把 ⋯ 藏掉，用户就再也进不了图标编辑了。
 			    顶栏真的一条条目都没有时不画（没什么可编辑的，也不留空壳）。 */}

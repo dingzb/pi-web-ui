@@ -12594,6 +12594,7 @@ export class ClientSession {
 		const removedKeys = new Set(this.stateStore.getRemovedProjects(this.clientId).map(normalizePathKey));
 		// 过滤掉已销毁（不在沙盒注册表且目录位于 sandboxesRoot 下）的残留沙盒条目
 		const validProjects = projects.filter((p) => {
+			if (removedKeys.has(normalizePathKey(p.path))) return false;
 			if (isSameOrSubpath(p.path, this.sandboxes.sandboxesRoot)) {
 				return Boolean(this.sandboxes.getByCwd(p.path));
 			}

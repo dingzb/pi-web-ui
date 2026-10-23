@@ -5907,7 +5907,7 @@ export class DshAgentService {
 			// 同步创建（runtime.start() 异步后台进行）——无并发竞态，无需 pending。
 			cs = DshClientSession.create(clientId, cwd, this.stateStore, this.dataDir, this.agentDir);
 			this.clients.set(clientId, cs);
-			this.stateStore.remember(clientId, cwd);
+			this.stateStore.remember(clientId, cwd, { restoreRemoved: false });
 			if (cwd !== this.cwd) {
 				send({
 					type: "notice",

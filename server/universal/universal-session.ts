@@ -368,7 +368,7 @@ export class UniversalSession implements DispatchSession {
 
 		// 记录当前客户端访问的工作区
 		if (typeof this.stateStore?.remember === "function" && this.cwd) {
-			this.stateStore.remember(this.clientId, this.cwd);
+			this.stateStore.remember(this.clientId, this.cwd, { restoreRemoved: false });
 		}
 
 		// 若驱动为 Claude Code，异步探测环境并下发安装指引

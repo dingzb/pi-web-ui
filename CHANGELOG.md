@@ -8,6 +8,28 @@
 每个版本的内容按"实际合入该版本发布的提交"归档（以 `package.json` 的 version 变更提交为准），
 而不是按提交日期聚类——连续快速发布的 patch 版本以此为准最准确。
 
+## [Unreleased]
+
+### Changed
+
+- 将 Web 界面统一为 X-FDE 简洁对话风格，优化侧栏、消息气泡、输入框、设置与目录选择弹窗。
+- 将主题选择移入设置，精简顶栏、状态栏和模型工作流提示词模板。
+- 将运行对话合并到项目下的对话列表，移除消息派生入口。
+
+### Fixed
+
+- 修复状态栏提示遮挡、文件列表悬停行高变化及已删除项目在重连后重新出现。
+- 项目内对话优先复用运行实例，保持消息实时更新。
+
+<!-- auto-i18n:start -->
+### i18n
+
+- 前端新增 key（10）：`chatWelcome`、`tpl.model.dev`、`tpl.model.dev.desc`、`tpl.model.dev.prompt`、`tpl.model.deploy`、`tpl.model.deploy.desc`、`tpl.model.deploy.prompt`、`tpl.model.analyze`、`tpl.model.analyze.desc`、`tpl.model.analyze.prompt`
+- 前端删除 key（78）：`workspaceModeLocal`、`workspaceModeRemote`、`tpl.sk.setup`、`tpl.sk.setup.desc`、`tpl.sk.setup.prompt`、`tpl.sk.ask`、`tpl.sk.ask.desc`、`tpl.sk.ask.prompt`、`tpl.sk.grilldocs`、`tpl.sk.grilldocs.desc`、`tpl.sk.grilldocs.prompt`、`tpl.sk.tospec`、`tpl.sk.tospec.desc`、`tpl.sk.tospec.prompt`、`tpl.sk.totickets`、`tpl.sk.totickets.desc`、`tpl.sk.totickets.prompt`、`tpl.sk.implement`、`tpl.sk.implement.desc`、`tpl.sk.implement.prompt`、`tpl.sk.codeview`、`tpl.sk.codeview.desc`、`tpl.sk.codeview.prompt`、`tpl.sk.wayfinder`、`tpl.sk.wayfinder.desc`、`tpl.sk.wayfinder.prompt`、`tpl.sk.prototype`、`tpl.sk.prototype.desc`、`tpl.sk.prototype.prompt`、`tpl.sk.research`、`tpl.sk.research.desc`、`tpl.sk.research.prompt`、`tpl.sk.arch`、`tpl.sk.arch.desc`、`tpl.sk.arch.prompt`、`tpl.sk.debug`、`tpl.sk.debug.desc`、`tpl.sk.debug.prompt`、`tpl.sk.merge`、`tpl.sk.merge.desc`、`tpl.sk.merge.prompt`、`tpl.sk.triage`、`tpl.sk.triage.desc`、`tpl.sk.triage.prompt`、`tpl.sk.wizard`、`tpl.sk.wizard.desc`、`tpl.sk.wizard.prompt`、`tpl.sk.grillme`、`tpl.sk.grillme.desc`、`tpl.sk.grillme.prompt`、`tpl.sk.handoff`、`tpl.sk.handoff.desc`、`tpl.sk.handoff.prompt`、`tpl.sk.questionnaire`、`tpl.sk.questionnaire.desc`、`tpl.sk.questionnaire.prompt`、`tpl.sk.teach`、`tpl.sk.teach.desc`、`tpl.sk.teach.prompt`、`tpl.sk.ww`、`tpl.sk.ww.desc`、`tpl.sk.ww.prompt`、`tpl.sk.wfa`、`tpl.sk.wfa.desc`、`tpl.sk.wfa.prompt`、`tpl.sk.codesign`、`tpl.sk.codesign.desc`、`tpl.sk.codesign.prompt`、`tpl.sk.domain`、`tpl.sk.domain.desc`、`tpl.sk.domain.prompt`、`tpl.sk.grilling`、`tpl.sk.grilling.desc`、`tpl.sk.grilling.prompt`、`tpl.sk.tdd`、`tpl.sk.tdd.desc`、`tpl.sk.tdd.prompt`、`actionSuggestionsTip`
+- 前端中文变更（6）：`docTitle`、`settingsEnginePiTitle`、`placeholderIdle`、`updateTabTitle`、`ttsPreviewLine`、`connectingServer`
+- 前端英文变更（6）：`docTitle`、`settingsEnginePiTitle`、`placeholderIdle`、`updateTabTitle`、`ttsPreviewLine`、`connectingServer`
+<!-- auto-i18n:end -->
+
 ## [0.109.0] — 2026-10-19
 
 ### Changed

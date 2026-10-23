@@ -35,7 +35,7 @@ export const SUPPORTED_ENGINES: EngineMeta[] = [
 	{
 		id: "pi",
 		titleKey: "settingsEnginePiTitle",
-		badge: "PI",
+		badge: "X-FDE",
 		tagKey: "engineTagFull",
 		descKey: "settingsEnginePiDesc",
 		colorClass: "engine-pi",
